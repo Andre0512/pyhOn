@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import secrets
@@ -6,20 +7,20 @@ from typing import List
 
 import aiohttp as aiohttp
 
-import const
-from auth import HonAuth
-from device import HonDevice
+from pyhon import const
+from pyhon.auth import HonAuth
+from pyhon.device import HonDevice
 
 _LOGGER = logging.getLogger()
 
 
 class HonConnection:
-    def __init__(self, email, password) -> None:
+    def __init__(self, email, password, session=None) -> None:
         super().__init__()
         self._email = email
         self._password = password
         self._request_headers = {"Content-Type": "application/json"}
-        self._session = None
+        self._session = session
         self._devices = []
         self._mobile_id = secrets.token_hex(8)
 
@@ -51,7 +52,13 @@ class HonConnection:
                                    headers=await self._headers) as resp:
                 try:
                     appliances = (await resp.json())["payload"]["appliances"]
-                    self._devices = [HonDevice(self, appliance) for appliance in appliances]
+                    for appliance in appliances:
+                        device = HonDevice(self, appliance)
+                        await asyncio.gather(*[
+                            device.load_attributes(),
+                            device.load_commands(),
+                            device.load_statistics()])
+                    self._devices.append(device)
                 except json.JSONDecodeError:
                     _LOGGER.error("No JSON Data after GET: %s", await resp.text())
                     return False

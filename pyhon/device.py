@@ -1,4 +1,4 @@
-from commands import HonCommand
+from pyhon.commands import HonCommand
 
 
 class HonDevice:
@@ -147,3 +147,6 @@ class HonDevice:
 
     async def load_statistics(self):
         self._statistics = await self._connector.load_statistics(self)
+
+    async def update(self):
+        await self.load_attributes()

@@ -1,4 +1,4 @@
-from parameter import HonParameterFixed, HonParameterEnum, HonParameterRange
+from pyhon.parameter import HonParameterFixed, HonParameterEnum, HonParameterRange
 
 
 class HonCommand:
