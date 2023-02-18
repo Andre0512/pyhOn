@@ -1,15 +1,19 @@
-from pyhon.parameter import HonParameterFixed, HonParameterEnum, HonParameterRange
+from pyhon.parameter import HonParameterFixed, HonParameterEnum, HonParameterRange, HonParameterProgram
 
 
 class HonCommand:
-    def __init__(self, name, attributes, connector, device, multi=None):
+    def __init__(self, name, attributes, connector, device, multi=None, category=""):
         self._connector = connector
         self._device = device
         self._name = name
+        self._multi = multi or {}
+        self._category = category
         self._description = attributes.get("description", "")
         self._parameters = self._create_parameters(attributes.get("parameters", {}))
         self._ancillary_parameters = self._create_parameters(attributes.get("ancillaryParameters", {}))
-        self._multi = multi
+
+    def __repr__(self):
+        return f"{self._name} command"
 
     def _create_parameters(self, parameters):
         result = {}
@@ -21,11 +25,14 @@ class HonCommand:
                     result[parameter] = HonParameterEnum(parameter, attributes)
                 case "fixed":
                     result[parameter] = HonParameterFixed(parameter, attributes)
+        if self._multi:
+            result["program"] = HonParameterProgram("program", {"current": self._category, "values": list(self._multi)})
         return result
 
     @property
     def parameters(self):
-        return {key: parameter.value for key, parameter in self._parameters.items()}
+        result = {key: parameter.value for key, parameter in self._parameters.items()}
+        return result | {"program": self._category}
 
     @property
     def ancillary_parameters(self):
@@ -40,3 +47,30 @@ class HonCommand:
 
     async def set_program(self, program):
         self._device.commands[self._name] = self._multi[program]
+
+    def _get_settings_keys(self, command=None):
+        command = command or self
+        keys = []
+        for key, parameter in command._parameters.items():
+            if isinstance(parameter, HonParameterFixed):
+                continue
+            if key not in keys:
+                keys.append(key)
+        return keys
+
+    @property
+    def setting_keys(self):
+        if not self._multi:
+            return self._get_settings_keys()
+        result = [key for cmd in self._multi.values() for key in self._get_settings_keys(cmd)]
+        return list(set(result + ["program"]))
+
+    @property
+    def settings(self):
+        return {s: self._parameters[s] for s in self.setting_keys}
+
+    def set_setting(self, key, value):
+        if key == "program":
+            self.set_program(key)
+        else:
+            self.parameters[key].value = value

@@ -6,8 +6,8 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(
-    name="pyhon",
-    version="0.0.5",
+    name="pyhOn",
+    version="0.0.6",
     author="Andre Basche",
     description="Control hOn devices with python",
     long_description=long_description,

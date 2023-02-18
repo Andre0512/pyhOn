@@ -135,10 +135,17 @@ class HonDevice:
             elif "parameters" in attr[list(attr)[0]]:
                 multi = {}
                 for category, attr2 in attr.items():
-                    cmd = HonCommand(command, attr2, self._connector, self, multi=multi)
+                    cmd = HonCommand(command, attr2, self._connector, self, multi=multi, category=category)
                     multi[category] = cmd
                     commands[command] = cmd
         self._commands = commands
+
+    @property
+    def settings(self):
+        result = {}
+        for command in self._commands.values():
+            result |= command.settings
+        return result
 
     async def load_attributes(self):
         data = await self._connector.load_attributes(self)
