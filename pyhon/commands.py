@@ -26,7 +26,7 @@ class HonCommand:
                 case "fixed":
                     result[parameter] = HonParameterFixed(parameter, attributes)
         if self._multi:
-            result["program"] = HonParameterProgram("program", {"current": self._category, "values": list(self._multi)})
+            result["program"] = HonParameterProgram("program", self)
         return result
 
     @property
@@ -42,10 +42,10 @@ class HonCommand:
         return await self._connector.send_command(self._device, self._name, self.parameters,
                                                   self.ancillary_parameters)
 
-    async def get_programs(self):
+    def get_programs(self):
         return self._multi
 
-    async def set_program(self, program):
+    def set_program(self, program):
         self._device.commands[self._name] = self._multi[program]
 
     def _get_settings_keys(self, command=None):
@@ -69,8 +69,3 @@ class HonCommand:
     def settings(self):
         return {s: self._parameters[s] for s in self.setting_keys}
 
-    def set_setting(self, key, value):
-        if key == "program":
-            self.set_program(key)
-        else:
-            self.parameters[key].value = value
