@@ -143,8 +143,17 @@ class HonDevice:
     @property
     def settings(self):
         result = {}
-        for command in self._commands.values():
-            result |= command.settings
+        for name, command in self._commands.items():
+            for key, setting in command.settings.items():
+                result[f"{name}.{key}"] = setting
+        return result
+
+    @property
+    def parameters(self):
+        result = {}
+        for name, command in self._commands.items():
+            for key, parameter in command.parameters.items():
+                result[f"{name}.{key}"] = parameter
         return result
 
     async def load_attributes(self):

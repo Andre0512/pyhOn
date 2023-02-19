@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="pyhOn",
-    version="0.0.12",
+    version="0.0.13",
     author="Andre Basche",
     description="Control hOn devices with python",
     long_description=long_description,
@@ -18,5 +18,10 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=["aiohttp"]
+    install_requires=["aiohttp"],
+    entry_points={
+        'console_scripts': [
+            'pyhOn = pyhon.__main__:start',
+        ]
+    }
 )

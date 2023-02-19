@@ -69,7 +69,7 @@ class HonAuth:
             except json.JSONDecodeError:
                 if framework := re.findall('clientOutOfSync.*?Expected: ([\\w-]+?) Actual: (.*?)"', text):
                     self._framework, actual = framework[0]
-                    _LOGGER.warning('Framework update from "%s" to "%s"', self._framework, actual)
+                    _LOGGER.debug('Framework update from "%s" to "%s"', self._framework, actual)
                     return await self._get_frontdoor_url(session, email, password)
                 _LOGGER.error("Unable to retrieve the frontdoor URL. Message: " + text)
                 return ""

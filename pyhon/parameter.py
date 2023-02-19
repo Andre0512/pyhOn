@@ -20,6 +20,9 @@ class HonParameterFixed(HonParameter):
         super().__init__(key, attributes)
         self._value = attributes["fixedValue"]
 
+    def __repr__(self):
+        return f"{self.__class__} (<{self.key}> fixed)"
+
     @property
     def value(self):
         return self._value
@@ -40,7 +43,7 @@ class HonParameterRange(HonParameter):
         self._value = self._default
 
     def __repr__(self):
-        return f"{self.key} [{self._min} - {self._max}]"
+        return f"{self.__class__} (<{self.key}> [{self._min} - {self._max}])"
 
     @property
     def min(self):
@@ -74,7 +77,7 @@ class HonParameterEnum(HonParameter):
         self._values = attributes.get("enumValues")
 
     def __repr__(self):
-        return f"{self.key} {self.values}"
+        return f"{self.__class__} (<{self.key}> {self.values})"
 
     @property
     def values(self):

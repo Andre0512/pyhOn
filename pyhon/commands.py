@@ -32,7 +32,9 @@ class HonCommand:
     @property
     def parameters(self):
         result = {key: parameter.value for key, parameter in self._parameters.items()}
-        return result | {"program": self._category}
+        if self._multi:
+            result |= {"program": self._category}
+        return result
 
     @property
     def ancillary_parameters(self):
