@@ -166,3 +166,7 @@ class HonDevice:
 
     async def update(self):
         await self.load_attributes()
+
+    @property
+    def data(self):
+        return self.attributes | self.parameters | self._appliance | self._statistics

@@ -25,7 +25,7 @@ class HonParameterFixed(HonParameter):
 
     @property
     def value(self):
-        return self._value
+        return self._value if self._value is not None else "0"
 
     @value.setter
     def value(self, value):
@@ -85,7 +85,7 @@ class HonParameterEnum(HonParameter):
 
     @property
     def value(self):
-        return self._value
+        return self._value if self._value is not None else self.values[0]
 
     @value.setter
     def value(self, value):
