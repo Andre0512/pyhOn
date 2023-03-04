@@ -69,5 +69,6 @@ class HonCommand:
 
     @property
     def settings(self):
+        """Parameters with typology enum and range"""
         return {s: self._parameters[s] for s in self.setting_keys}
 

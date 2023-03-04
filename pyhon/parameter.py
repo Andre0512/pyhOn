@@ -14,6 +14,18 @@ class HonParameter:
     def value(self):
         return self._value if self._value is not None else "0"
 
+    @property
+    def category(self):
+        return self._category
+
+    @property
+    def typology(self):
+        return self._typology
+
+    @property
+    def mandatory(self):
+        return self._mandatory
+
 
 class HonParameterFixed(HonParameter):
     def __init__(self, key, attributes):
