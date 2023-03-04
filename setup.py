@@ -12,13 +12,26 @@ setup(
     description="Control hOn devices with python",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url="https://github.com/Andre0512/pyh0n",
+    project_urls={
+        "GitHub": "https://github.com/Andre0512/pyhOn",
+        "PyPI": "https://pypi.org/project/pyhOn",
+    },
     license="MIT",
     platforms="any",
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.10",
     install_requires=["aiohttp"],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+    ],
     entry_points={
         'console_scripts': [
             'pyhOn = pyhon.__main__:start',

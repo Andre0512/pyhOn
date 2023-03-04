@@ -1,10 +1,21 @@
 **This python package is unofficial and is not related in any way to Haier. It was developed by reversed engineered requests and can stop working at anytime!**
 
 # pyhOn
+[![PyPI - Status](https://img.shields.io/pypi/status/pyhOn)](https://pypi.org/project/pyhOn)
+[![PyPI](https://img.shields.io/pypi/v/pyhOn?color=blue)](https://pypi.org/project/pyhOn)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyhOn)](https://www.python.org/)
+[![PyPI - License](https://img.shields.io/pypi/l/pyhOn)](https://github.com/Andre0512/pyhOn/blob/main/LICENCE)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/pyhOn)](https://pypistats.org/packages/pyhOn)  
 Control your Haier appliances with python!
 The idea behind this library is, to make the use of all available commands as simple as possible.
+
+## Installation
+```bash
+pip install pyhOn
+```
+
 ### Quick overview
-To get an idea of what is possible, use the commandline-tool `pyhOn`. This lists all available options of the appliances from your Haier Account.
+To get an idea of what is possible, use the commandline-tool `pyhOn`. This command requests all available options of connected appliances from the hOn api of your Haier Account.
 ```commandline
 $ pyhOn --user example@mail.com --password pass123
 ========== Waschmaschine ==========
@@ -67,7 +78,7 @@ async with HonConnection(USER, PASSWORD) as hon:
 ## Tested devices
 - Haier Washing Machine HW90
 
-_Unfortunately I don't have any more haier appliances_
+_Unfortunately I don't have any more Haier appliances..._
 
 ## Usage example
 This library is used for the custom [HomeAssistant Integration "Haier hOn"](https://github.com/Andre0512/hOn).
