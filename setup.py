@@ -7,12 +7,12 @@ with open("README.md", "r") as f:
 
 setup(
     name="pyhOn",
-    version="0.0.14",
+    version="0.2.0",
     author="Andre Basche",
     description="Control hOn devices with python",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url="https://github.com/Andre0512/pyhon",
+    url="https://github.com/Andre0512/pyh0n",
     license="MIT",
     platforms="any",
     packages=find_packages(),

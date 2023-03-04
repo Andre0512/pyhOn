@@ -9,7 +9,7 @@ class HonDevice:
 
         self._commands = {}
         self._statistics = {}
-        self._attributs = {}
+        self._attributes = {}
 
     @property
     def appliance_id(self):
@@ -117,7 +117,7 @@ class HonDevice:
 
     @property
     def attributes(self):
-        return self._attributs
+        return self._attributes
 
     @property
     def statistics(self):
@@ -159,7 +159,7 @@ class HonDevice:
     async def load_attributes(self):
         data = await self._connector.load_attributes(self)
         for name, values in data.get("shadow").get("parameters").items():
-            self._attributs[name] = values["parNewVal"]
+            self._attributes[name] = values["parNewVal"]
 
     async def load_statistics(self):
         self._statistics = await self._connector.load_statistics(self)

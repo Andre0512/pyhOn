@@ -26,6 +26,7 @@ class HonConnection:
 
     async def __aenter__(self):
         self._session = aiohttp.ClientSession()
+        await self.setup()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
