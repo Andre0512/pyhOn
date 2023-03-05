@@ -55,7 +55,7 @@ async def main():
         password = getpass("Password for hOn account: ")
     async with HonConnection(user, password) as hon:
         for device in hon.devices:
-            print("=" * 10, device.nick_name, "=" * 10)
+            print("=" * 10, device.appliance_type_name, "-", device.nick_name, "=" * 10)
             pretty_print({"commands": device.commands})
             pretty_print({"data": device.data})
 

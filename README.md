@@ -18,7 +18,7 @@ pip install pyhOn
 To get an idea of what is possible, use the commandline-tool `pyhOn`. This command requests all available options of connected appliances from the hOn api of your Haier Account.
 ```commandline
 $ pyhOn --user example@mail.com --password pass123
-========== Waschmaschine ==========
+========== WM - Waschmaschine ==========
 commands:
   pauseProgram: pauseProgram command
   resumeProgram: resumeProgram command
@@ -31,7 +31,6 @@ data:
   antiAllergyStatus: 0
 ...
 ```
-The claim is, to see everything what you can see in your hOn app and to execute everything you can execute there.
 
 ## Python-API
 ### List devices
@@ -82,3 +81,7 @@ _Unfortunately I don't have any more Haier appliances..._
 
 ## Usage example
 This library is used for the custom [HomeAssistant Integration "Haier hOn"](https://github.com/Andre0512/hOn).
+
+## Contribution
+Any kind of contribution is welcome!
+

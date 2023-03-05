@@ -1,9 +1,14 @@
+import importlib
+from pprint import pprint
+
 from pyhon.commands import HonCommand
 
 
 class HonDevice:
     def __init__(self, connector, appliance):
         self._appliance = appliance
+        for values in self._appliance.pop("attributes"):
+            self._appliance[values["parName"]] = values["parValue"]
         self._connector = connector
         self._appliance_model = {}
 
@@ -123,6 +128,10 @@ class HonDevice:
     def statistics(self):
         return self._statistics
 
+    @property
+    def appliance(self):
+        return self._appliance
+
     async def load_commands(self):
         raw = await self._connector.load_commands(self)
         self._appliance_model = raw.pop("applianceModel")
@@ -160,6 +169,8 @@ class HonDevice:
         data = await self._connector.load_attributes(self)
         for name, values in data.get("shadow").get("parameters").items():
             self._attributes[name] = values["parNewVal"]
+        for name, value in data.get("lastConnEvent").items():
+            self._attributes[f"lastConnEvent.{name}"] = value
 
     async def load_statistics(self):
         self._statistics = await self._connector.load_statistics(self)
@@ -169,4 +180,9 @@ class HonDevice:
 
     @property
     def data(self):
-        return self.attributes | self.parameters | self._appliance | self._statistics
+        result = self.attributes | self.parameters | self.appliance | self._statistics
+        try:
+            extra = importlib.import_module(f'appliances.{self.appliance_type_name.lower()}')
+            return result | extra.Appliance(result).get()
+        except ModuleNotFoundError:
+            return result
