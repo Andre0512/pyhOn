@@ -76,7 +76,7 @@ class HonParameterRange(HonParameter):
     @value.setter
     def value(self, value):
         if self._min <= value <= self._max and not value % self._step:
-            self._value = self._value
+            self._value = value
         else:
             raise ValueError(f"Allowed: min {self._min} max {self._max} step {self._step}")
 
@@ -102,7 +102,7 @@ class HonParameterEnum(HonParameter):
     @value.setter
     def value(self, value):
         if value in self.values:
-            self._value = self._value
+            self._value = value
         else:
             raise ValueError(f"Allowed values {self._value}")
 
@@ -123,4 +123,4 @@ class HonParameterProgram(HonParameterEnum):
         if value in self.values:
             self._command.set_program(value)
         else:
-            raise ValueError(f"Allowed values {self._value}")
+            raise ValueError(f"Allowed values {self._values}")
