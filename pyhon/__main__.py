@@ -24,7 +24,7 @@ def get_arguments():
     return vars(parser.parse_args())
 
 
-# yaml.dump() would be done the same, but needs an additional import...
+# yaml.dump() would be done the same, but needs an additional dependency...
 def pretty_print(data, key="", intend=0, is_list=False):
     if type(data) is list:
         if key:
@@ -45,6 +45,18 @@ def pretty_print(data, key="", intend=0, is_list=False):
                 pretty_print(value, key=key, intend=intend)
     else:
         print(f"{'  ' * intend}{'- ' if is_list else ''}{key}{': ' if key else ''}{data}")
+
+
+def create_command(commands):
+    result = {}
+    for name, command in commands.items():
+        result[name] = {}
+        for parameter, data in command.parameters.items():
+            if data.typology == "enum":
+                result[name][parameter] = data.values
+            if data.typology == "range":
+                result[name][parameter] = {"min": data.min, "max": data.max, "step": data.step}
+    return result
 
 
 async def main():

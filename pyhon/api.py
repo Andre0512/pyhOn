@@ -92,8 +92,8 @@ class HonConnection:
         }
         url = f"{const.API_URL}/commands/v1/context"
         async with self._session.get(url, params=params, headers=await self._headers) as response:
-            if response.status_code >= 400 and not loop:
-                _LOGGER.error("%s - Error %s - %s", url, response.status_code, await response.text)
+            if response.status >= 400 and not loop:
+                _LOGGER.error("%s - Error %s - %s", url, response.status, await response.text)
                 await self.setup()
                 return await self.load_attributes(device, loop=True)
             return (await response.json()).get("payload", {})

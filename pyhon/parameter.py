@@ -113,6 +113,7 @@ class HonParameterProgram(HonParameterEnum):
         self._command = command
         self._value = command._category
         self._values = command._multi
+        self._typology = "enum"
 
     @property
     def value(self):

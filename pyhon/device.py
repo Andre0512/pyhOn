@@ -162,7 +162,7 @@ class HonDevice:
         result = {}
         for name, command in self._commands.items():
             for key, parameter in command.parameters.items():
-                result[f"{name}.{key}"] = parameter
+                result[f"{name}.{key}"] = parameter.value
         return result
 
     async def load_attributes(self):

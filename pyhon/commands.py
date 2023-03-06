@@ -31,18 +31,15 @@ class HonCommand:
 
     @property
     def parameters(self):
-        result = {key: parameter.value for key, parameter in self._parameters.items()}
-        if self._multi:
-            result |= {"program": self._category}
-        return result
+        return self._parameters
 
     @property
     def ancillary_parameters(self):
         return {key: parameter.value for key, parameter in self._ancillary_parameters.items()}
 
     async def send(self):
-        return await self._connector.send_command(self._device, self._name, self.parameters,
-                                                  self.ancillary_parameters)
+        parameters = {name: parameter.value for name, parameter in self._parameters}
+        return await self._connector.send_command(self._device, self._name, parameters, self.ancillary_parameters)
 
     def get_programs(self):
         return self._multi
