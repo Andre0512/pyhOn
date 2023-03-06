@@ -3,5 +3,6 @@ class Appliance:
         self._data = data
 
     def get(self):
-        self._data["connected"] = self._data["lastConnEvent.category"] == "CONNECTED"
+        if self._data["lastConnEvent.category"] == "DISCONNECTED":
+            self._data["machMode"] = "0"
         return self._data
