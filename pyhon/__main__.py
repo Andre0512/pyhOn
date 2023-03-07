@@ -21,6 +21,9 @@ def get_arguments():
     parser = argparse.ArgumentParser(description="pyhOn: Command Line Utility")
     parser.add_argument("-u", "--user", help="user for haier hOn account")
     parser.add_argument("-p", "--password", help="password for haier hOn account")
+    subparser = parser.add_subparsers(title="commands", metavar="COMMAND")
+    keys = subparser.add_parser("keys", help="print as key format")
+    keys.add_argument("keys", help="print as key format", action="store_true")
     return vars(parser.parse_args())
 
 
@@ -47,15 +50,33 @@ def pretty_print(data, key="", intend=0, is_list=False):
         print(f"{'  ' * intend}{'- ' if is_list else ''}{key}{': ' if key else ''}{data}")
 
 
-def create_command(commands):
+def key_print(data, key="", start=True):
+    if type(data) is list:
+        for i, value in enumerate(data):
+            key_print(value, key=f"{key}.{i}", start=False)
+    elif type(data) is dict:
+        for k, value in sorted(data.items()):
+            key_print(value, key=k if start else f"{key}.{k}", start=False)
+    else:
+        print(f"{key}: {data}")
+
+
+def create_command(commands, concat=False):
     result = {}
     for name, command in commands.items():
-        result[name] = {}
+        if not concat:
+            result[name] = {}
         for parameter, data in command.parameters.items():
             if data.typology == "enum":
-                result[name][parameter] = data.values
-            if data.typology == "range":
-                result[name][parameter] = {"min": data.min, "max": data.max, "step": data.step}
+                value = data.values
+            elif data.typology == "range":
+                value = {"min": data.min, "max": data.max, "step": data.step}
+            else:
+                continue
+            if not concat:
+                result[name][parameter] = value
+            else:
+                result[f"{name}.{parameter}"] = value
     return result
 
 
@@ -67,9 +88,15 @@ async def main():
         password = getpass("Password for hOn account: ")
     async with HonConnection(user, password) as hon:
         for device in hon.devices:
-            print("=" * 10, device.appliance_type_name, "-", device.nick_name, "=" * 10)
-            pretty_print({"commands": device.commands})
-            pretty_print({"data": device.data})
+            print("=" * 10, device.appliance_type, "-", device.nick_name, "=" * 10)
+            if args.get("keys"):
+                key_print(device.data["attributes"]["parameters"])
+                key_print(device.data["appliance"])
+                key_print(device.data)
+                pretty_print(create_command(device.commands, concat=True))
+            else:
+                pretty_print({"data": device.data})
+                pretty_print({"settings": create_command(device.commands)})
 
 
 def start():

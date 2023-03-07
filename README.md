@@ -19,17 +19,28 @@ To get an idea of what is possible, use the commandline-tool `pyhOn`. This comma
 ```commandline
 $ pyhOn --user example@mail.com --password pass123
 ========== WM - Waschmaschine ==========
-commands:
-  pauseProgram: pauseProgram command
-  resumeProgram: resumeProgram command
-  startProgram: startProgram command
-  stopProgram: stopProgram command
 data:
-  actualWeight: 0
-  airWashTempLevel: 0
-  airWashTime: 0
-  antiAllergyStatus: 0
-...
+  attributes:
+    parameters:
+      ...
+      texture: 1
+      totalElectricityUsed: 28.71
+      totalWashCycle: 35
+      totalWaterUsed: 2494
+      transMode: 0
+      ...
+settings:
+  startProgram:
+    rinseIterations:
+      max: 5
+      min: 3
+      step: 1
+    spinSpeed:
+      - 0
+      - 400
+      - 600
+      - 800
+      ...
 ```
 
 ## Python-API
@@ -55,8 +66,6 @@ async with HonConnection(USER, PASSWORD) as hon:
 ```
 
 ### Set command parameter
-Use `device.settings` to get all variable parameters.  
-Use `device.parmeters` to get also fixed parameters. 
 ```python
 async with HonConnection(USER, PASSWORD) as hon:
     washing_machine = hon.devices[0]

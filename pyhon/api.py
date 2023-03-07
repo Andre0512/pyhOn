@@ -67,15 +67,15 @@ class HonConnection:
 
     async def load_commands(self, device: HonDevice):
         params = {
-            "applianceType": device.appliance_type_name,
-            "code": device.code,
+            "applianceType": device.appliance_type,
+            "code": device.appliance["code"],
             "applianceModelId": device.appliance_model_id,
             "firmwareId": "41",
             "macAddress": device.mac_address,
-            "fwVersion": device.fw_version,
+            "fwVersion": device.appliance["fwVersion"],
             "os": const.OS,
             "appVersion": const.APP_VERSION,
-            "series": device.series,
+            "series": device.appliance["series"],
         }
         url = f"{const.API_URL}/commands/v1/retrieve"
         async with self._session.get(url, params=params, headers=await self._headers) as response:
@@ -87,13 +87,13 @@ class HonConnection:
     async def load_attributes(self, device: HonDevice, loop=False):
         params = {
             "macAddress": device.mac_address,
-            "applianceType": device.appliance_type_name,
+            "applianceType": device.appliance_type,
             "category": "CYCLE"
         }
         url = f"{const.API_URL}/commands/v1/context"
         async with self._session.get(url, params=params, headers=await self._headers) as response:
             if response.status >= 400 and not loop:
-                _LOGGER.error("%s - Error %s - %s", url, response.status, await response.text)
+                _LOGGER.error("%s - Error %s - %s", url, response.status, await response.text())
                 await self.setup()
                 return await self.load_attributes(device, loop=True)
             return (await response.json()).get("payload", {})
@@ -101,7 +101,7 @@ class HonConnection:
     async def load_statistics(self, device: HonDevice):
         params = {
             "macAddress": device.mac_address,
-            "applianceType": device.appliance_type_name
+            "applianceType": device.appliance_type
         }
         url = f"{const.API_URL}/commands/v1/statistics"
         async with self._session.get(url, params=params, headers=await self._headers) as response:
