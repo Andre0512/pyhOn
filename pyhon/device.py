@@ -23,7 +23,7 @@ class HonDevice:
         if "." in item:
             result = self.data
             for key in item.split("."):
-                if all([k in "0123456789" for k in key]):
+                if all([k in "0123456789" for k in key]) and type(result) is list:
                     result = result[int(key)]
                 else:
                     result = result[key]
@@ -31,14 +31,15 @@ class HonDevice:
         else:
             if item in self.data:
                 return self.data[item]
-            return self.attributes["parameters"].get(item, self.appliance[item])
+            if item in self.attributes["parameters"]:
+                return self.attributes["parameters"].get(item)
+            return self.appliance[item]
 
     def get(self, item, default=None):
         try:
             return self[item]
-        except KeyError | IndexError:
+        except (KeyError, IndexError):
             return default
-
 
     @property
     def appliance_model_id(self):
@@ -127,7 +128,7 @@ class HonDevice:
     @property
     def data(self):
         result = {"attributes": self.attributes, "appliance": self.appliance, "statistics": self.statistics,
-                  "commands": self.parameters}
+                  **self.parameters}
         if self._extra:
             return result | self._extra.Appliance(result).get()
         return result
