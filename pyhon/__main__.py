@@ -24,6 +24,7 @@ def get_arguments():
     subparser = parser.add_subparsers(title="commands", metavar="COMMAND")
     keys = subparser.add_parser("keys", help="print as key format")
     keys.add_argument("keys", help="print as key format", action="store_true")
+    keys.add_argument("--all", help="print also full keys", action="store_true")
     return vars(parser.parse_args())
 
 
@@ -90,9 +91,12 @@ async def main():
         for device in hon.devices:
             print("=" * 10, device.appliance_type, "-", device.nick_name, "=" * 10)
             if args.get("keys"):
-                key_print(device.data["attributes"]["parameters"])
-                key_print(device.data["appliance"])
-                key_print(device.data)
+                data = device.data.copy()
+                attr = "get" if args.get("all") else "pop"
+                key_print(data["attributes"].__getattribute__(attr)("parameters"))
+                key_print(data.__getattribute__(attr)("appliance"))
+                key_print(data.__getattribute__(attr)("commands"))
+                key_print(data)
                 pretty_print(create_command(device.commands, concat=True))
             else:
                 pretty_print({"data": device.data})

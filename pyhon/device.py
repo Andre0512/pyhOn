@@ -33,6 +33,13 @@ class HonDevice:
                 return self.data[item]
             return self.attributes["parameters"].get(item, self.appliance[item])
 
+    def get(self, item, default=None):
+        try:
+            return self[item]
+        except KeyError | IndexError:
+            return default
+
+
     @property
     def appliance_model_id(self):
         return self._appliance.get("applianceModelId")
