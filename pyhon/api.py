@@ -129,7 +129,7 @@ class HonConnection:
             },
             "ancillaryParameters": ancillary_parameters,
             "parameters": parameters,
-            "applianceType": device.appliance_type_name
+            "applianceType": device.appliance_type
         }
         url = f"{const.API_URL}/commands/v1/send"
         async with self._session.post(url, headers=await self._headers, json=data) as resp:

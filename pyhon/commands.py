@@ -38,7 +38,7 @@ class HonCommand:
         return {key: parameter.value for key, parameter in self._ancillary_parameters.items()}
 
     async def send(self):
-        parameters = {name: parameter.value for name, parameter in self._parameters}
+        parameters = {name: parameter.value for name, parameter in self._parameters.items()}
         return await self._connector.send_command(self._device, self._name, parameters, self.ancillary_parameters)
 
     def get_programs(self):
