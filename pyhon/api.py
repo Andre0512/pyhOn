@@ -92,9 +92,10 @@ class HonConnection:
         }
         url = f"{const.API_URL}/commands/v1/context"
         async with self._session.get(url, params=params, headers=await self._headers) as response:
-            if response.status >= 400 and not loop:
+            if response.status == 403 and not loop:
                 _LOGGER.error("%s - Error %s - %s", url, response.status, await response.text())
-                await self.setup()
+                self._request_headers.pop("cognito-token", None)
+                self._request_headers.pop("id-token", None)
                 return await self.load_attributes(device, loop=True)
             return (await response.json()).get("payload", {})
 
