@@ -5,7 +5,8 @@ from pyhon.commands import HonCommand
 
 class HonDevice:
     def __init__(self, connector, appliance):
-        appliance["attributes"] = {v["parName"]: v["parValue"] for v in appliance["attributes"]}
+        if attributes := appliance.get("attributes"):
+            appliance["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
         self._appliance = appliance
         self._connector = connector
         self._appliance_model = {}
