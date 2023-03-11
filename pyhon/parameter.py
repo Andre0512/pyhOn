@@ -93,7 +93,7 @@ class HonParameterEnum(HonParameter):
 
     @property
     def values(self):
-        return [str(value) for value in self._values]
+        return sorted([str(value) for value in self._values])
 
     @property
     def value(self):
@@ -111,7 +111,7 @@ class HonParameterProgram(HonParameterEnum):
     def __init__(self, key, command):
         super().__init__(key, {})
         self._command = command
-        self._value = command._category
+        self._value = command._program
         self._values = command._multi
         self._typology = "enum"
 

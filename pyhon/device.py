@@ -92,9 +92,10 @@ class HonDevice:
                 commands[command] = HonCommand(command, attr, self._connector, self)
             elif "parameters" in attr[list(attr)[0]]:
                 multi = {}
-                for category, attr2 in attr.items():
-                    cmd = HonCommand(command, attr2, self._connector, self, multi=multi, category=category)
-                    multi[category] = cmd
+                for program, attr2 in attr.items():
+                    program = program.split(".")[-1].lower()
+                    cmd = HonCommand(command, attr2, self._connector, self, multi=multi, program=program)
+                    multi[program] = cmd
                     commands[command] = cmd
         self._commands = commands
 

@@ -2,12 +2,12 @@ from pyhon.parameter import HonParameterFixed, HonParameterEnum, HonParameterRan
 
 
 class HonCommand:
-    def __init__(self, name, attributes, connector, device, multi=None, category=""):
+    def __init__(self, name, attributes, connector, device, multi=None, program=""):
         self._connector = connector
         self._device = device
         self._name = name
         self._multi = multi or {}
-        self._category = category
+        self._program = program
         self._description = attributes.get("description", "")
         self._parameters = self._create_parameters(attributes.get("parameters", {}))
         self._ancillary_parameters = self._create_parameters(attributes.get("ancillaryParameters", {}))
