@@ -81,6 +81,20 @@ class HonDevice:
     def appliance(self):
         return self._appliance
 
+    async def _recover_last_command_states(self, commands):
+        command_history = await self._connector.command_history(self)
+        for name, command in commands.items():
+            last = next((index for (index, d) in enumerate(command_history) if d.get("command", {}).get("commandName") == name), None)
+            if last is None:
+                continue
+            parameters = command_history[last].get("command", {}).get("parameters", {})
+            if command._multi and parameters.get("program"):
+                command.set_program(parameters.pop("program").split(".")[-1].lower())
+                command = self.commands[name]
+            for key, data in command.settings.items():
+                if parameters.get(key) is not None:
+                    data.value = parameters.get(key)
+
     async def load_commands(self):
         raw = await self._connector.load_commands(self)
         self._appliance_model = raw.pop("applianceModel")
@@ -98,6 +112,7 @@ class HonDevice:
                     multi[program] = cmd
                     commands[command] = cmd
         self._commands = commands
+        await self._recover_last_command_states(commands)
 
     @property
     def settings(self):

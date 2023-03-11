@@ -84,6 +84,14 @@ class HonConnection:
                 return {}
             return result
 
+    async def command_history(self, device: HonDevice):
+        url = f"{const.API_URL}/commands/v1/appliance/{device.mac_address}/history"
+        async with self._session.get(url, headers=await self._headers) as response:
+            result = await response.json()
+            if not result or not result.get("payload"):
+                return {}
+            return result["payload"]["history"]
+
     async def load_attributes(self, device: HonDevice, loop=False):
         params = {
             "macAddress": device.mac_address,
