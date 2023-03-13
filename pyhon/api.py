@@ -70,7 +70,7 @@ class HonConnection:
             "applianceType": device.appliance_type,
             "code": device.appliance["code"],
             "applianceModelId": device.appliance_model_id,
-            "firmwareId": "41",
+            "firmwareId": device.appliance["eepromId"],
             "macAddress": device.mac_address,
             "fwVersion": device.appliance["fwVersion"],
             "os": const.OS,
