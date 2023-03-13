@@ -55,11 +55,13 @@ class HonConnection:
                     appliances = (await resp.json())["payload"]["appliances"]
                     for appliance in appliances:
                         device = HonDevice(self, appliance)
+                        if device.mac_address is None:
+                            continue
                         await asyncio.gather(*[
                             device.load_attributes(),
                             device.load_commands(),
                             device.load_statistics()])
-                    self._devices.append(device)
+                        self._devices.append(device)
                 except json.JSONDecodeError:
                     _LOGGER.error("No JSON Data after GET: %s", await resp.text())
                     return False
