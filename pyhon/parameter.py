@@ -30,7 +30,7 @@ class HonParameter:
 class HonParameterFixed(HonParameter):
     def __init__(self, key, attributes):
         super().__init__(key, attributes)
-        self._value = attributes["fixedValue"]
+        self._value = attributes.get("fixedValue", None)
 
     def __repr__(self):
         return f"{self.__class__} (<{self.key}> fixed)"
