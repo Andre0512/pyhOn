@@ -1,6 +1,7 @@
 import importlib
 
 from pyhon.commands import HonCommand
+from pyhon.parameter import HonParameterFixed
 
 
 class HonDevice:
@@ -93,7 +94,7 @@ class HonDevice:
                 command.set_program(parameters.pop("program").split(".")[-1].lower())
                 command = self.commands[name]
             for key, data in command.settings.items():
-                if parameters.get(key) is not None:
+                if not isinstance(data, HonParameterFixed) and parameters.get(key) is not None:
                     data.value = parameters.get(key)
 
     async def load_commands(self):
