@@ -1,4 +1,5 @@
 import importlib
+from contextlib import suppress
 
 from pyhon.commands import HonCommand
 from pyhon.parameter import HonParameterFixed
@@ -95,7 +96,8 @@ class HonDevice:
                 command = self.commands[name]
             for key, data in command.settings.items():
                 if not isinstance(data, HonParameterFixed) and parameters.get(key) is not None:
-                    data.value = parameters.get(key)
+                    with suppress(ValueError):
+                        data.value = parameters.get(key)
 
     async def load_commands(self):
         raw = await self._connector.load_commands(self)
