@@ -75,6 +75,7 @@ class HonParameterRange(HonParameter):
 
     @value.setter
     def value(self, value):
+        value = int(value)
         if self._min <= value <= self._max and not value % self._step:
             self._value = value
         else:
