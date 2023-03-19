@@ -47,7 +47,6 @@ class HonAuth:
             "scope": "api openid refresh_token web",
             "nonce": nonce
         }
-        headers = {"user-agent": "Chrome/110.0.5481.153"}
         params = "&".join([f"{k}={v}" for k, v in params.items()])
         async with session.get(f"{const.AUTH_API}/services/oauth2/authorize/expid_Login?{params}") as resp:
             if not (login_url := re.findall("url = '(.+?)'", await resp.text())):
@@ -58,7 +57,7 @@ class HonAuth:
         async with session.get(url, allow_redirects=False) as redirect2:
             if not (url := redirect2.headers.get("Location") + "&System=IoT_Mobile_App&RegistrationSubChannel=hOn"):
                 return False
-        async with session.get(URL(url, encoded=True), headers=headers) as login_screen:
+        async with session.get(URL(url, encoded=True)) as login_screen:
             if context := re.findall('"fwuid":"(.*?)","loaded":(\\{.*?})', await login_screen.text()):
                 fw_uid, loaded_str = context[0]
                 loaded = json.loads(loaded_str)
@@ -134,8 +133,12 @@ class HonAuth:
         return True
 
     async def authorize(self, email, password, mobile_id):
-        async with aiohttp.ClientSession() as session:
-            fw_uid, loaded, login_url = await self._load_login(session)
+        headers = {"user-agent": const.USER_AGENT}
+        async with aiohttp.ClientSession(headers=headers) as session:
+            if login_site := await self._load_login(session):
+                fw_uid, loaded, login_url = login_site
+            else:
+                return False
             if not (url := await self._login(session, email, password, fw_uid, loaded, login_url)):
                 return False
             if not await self._get_token(session, url):

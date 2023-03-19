@@ -3,6 +3,7 @@ import json
 import logging
 import secrets
 from datetime import datetime
+from pprint import pprint
 from typing import List
 
 import aiohttp as aiohttp
@@ -93,6 +94,48 @@ class HonConnection:
             if not result or not result.get("payload"):
                 return {}
             return result["payload"]["history"]
+
+    async def last_activity(self, device: HonDevice):
+        url = f"{const.API_URL}/commands/v1/retrieve-last-activity"
+        params = {"macAddress": device.mac_address}
+        async with self._session.get(url, params=params, headers=await self._headers) as response:
+            result = await response.json()
+            if result and (activity := result.get("attributes")):
+                return activity
+        return {}
+
+    async def appliance_configuration(self):
+        url = f"{const.API_URL}/config/v1/appliance-configuration"
+        headers = {"x-api-key": const.API_KEY, "content-type": "application/json"}
+        async with self._session.get(url, headers=headers) as response:
+            result = await response.json()
+            if result and (data := result.get("payload")):
+                return data
+        return {}
+
+    async def app_config(self, language="en", beta=True):
+        headers = {"x-api-key": const.API_KEY, "content-type": "application/json"}
+        url = f"{const.API_URL}/app-config"
+        payload = {
+              "languageCode": language,
+              "beta": beta,
+              "appVersion": const.APP_VERSION,
+              "os": const.OS
+            }
+        payload = json.dumps(payload, separators=(',', ':'))
+        async with self._session.post(url, headers=headers, data=payload) as response:
+            if (result := await response.json()) and (data := result.get("payload")):
+                return data
+        return {}
+
+    async def translation_keys(self):
+        headers = {"x-api-key": const.API_KEY, "content-type": "application/json"}
+        config = await self.app_config()
+        if url := config.get("language", {}).get("jsonPath"):
+            async with self._session.get(url, headers=headers) as response:
+                if result := await response.json():
+                    return result
+        return {}
 
     async def load_attributes(self, device: HonDevice, loop=False):
         params = {
