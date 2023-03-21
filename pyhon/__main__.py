@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import asyncio
+import json
 import logging
 import sys
-import time
 from getpass import getpass
 from pathlib import Path
 from pprint import pprint
@@ -25,6 +25,9 @@ def get_arguments():
     keys = subparser.add_parser("keys", help="print as key format")
     keys.add_argument("keys", help="print as key format", action="store_true")
     keys.add_argument("--all", help="print also full keys", action="store_true")
+    translate = subparser.add_parser("translate", help="print available translation keys")
+    translate.add_argument("translate", help="language (de, en, fr...)", metavar="LANGUAGE")
+    translate.add_argument("--json", help="print as json", action="store_true")
     return vars(parser.parse_args())
 
 
@@ -81,8 +84,22 @@ def create_command(commands, concat=False):
     return result
 
 
+async def translate(language, json_output=False):
+    async with HonConnection() as hon:
+        keys = await hon.translation_keys(language)
+    if json_output:
+        print(json.dumps(keys, indent=4))
+    else:
+        clean_keys = json.dumps(keys).replace("\\n", "\\\\n").replace("\\\\r", "").replace("\\r", "")
+        keys = json.loads(clean_keys)
+        pretty_print(keys)
+
+
 async def main():
     args = get_arguments()
+    if language := args.get("translate"):
+        await translate(language, json_output=args.get("json"))
+        return
     if not (user := args["user"]):
         user = input("User for hOn account: ")
     if not (password := args["password"]):

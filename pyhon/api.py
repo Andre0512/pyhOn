@@ -3,7 +3,6 @@ import json
 import logging
 import secrets
 from datetime import datetime
-from pprint import pprint
 from typing import List
 
 import aiohttp as aiohttp
@@ -16,7 +15,7 @@ _LOGGER = logging.getLogger()
 
 
 class HonConnection:
-    def __init__(self, email, password, session=None) -> None:
+    def __init__(self, email="", password="", session=None) -> None:
         super().__init__()
         self._email = email
         self._password = password
@@ -27,7 +26,8 @@ class HonConnection:
 
     async def __aenter__(self):
         self._session = aiohttp.ClientSession()
-        await self.setup()
+        if self._email and self._password:
+            await self.setup()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -128,9 +128,9 @@ class HonConnection:
                 return data
         return {}
 
-    async def translation_keys(self):
+    async def translation_keys(self, language="en"):
         headers = {"x-api-key": const.API_KEY, "content-type": "application/json"}
-        config = await self.app_config()
+        config = await self.app_config(language=language)
         if url := config.get("language", {}).get("jsonPath"):
             async with self._session.get(url, headers=headers) as response:
                 if result := await response.json():

@@ -83,10 +83,25 @@ async with HonConnection(USER, PASSWORD) as hon:
             setting.value = setting.min + setting.step
 ```
 
+## Translation
+To get the translation of some keys like programs, you can use the translation command to see all of hOn's available translations
+```commandline
+$ pyhOn translate es
+AC:
+  APPLIANCE_RENAME:
+    CONTENT_CHOOSE_NAME: Antes de continuar, debes elegir un nombre...
+    DEFAULT_NAME: Aire acondicionado
+    TITLE_CHOOSE_NAME: ¡Elije un nombre para tu aire acondicionado!
+    TITLE_SAVE_NAME: Para cambiar el nombre de tu aparato:
+...
+```
+This generates a huge output. It is recommended to pipe this into a file
+```commandline
+$ pyhOn translate fr > hon_fr.yaml
+$ pyhOn translate en --json > hon_en.json
+```
 ## Tested devices
 - Haier Washing Machine HW90
-
-_Unfortunately I don't have any more Haier appliances..._
 
 ## Usage example
 This library is used for the custom [HomeAssistant Integration "Haier hOn"](https://github.com/Andre0512/hOn).
