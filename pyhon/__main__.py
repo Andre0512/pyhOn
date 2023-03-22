@@ -112,7 +112,6 @@ async def main():
                 attr = "get" if args.get("all") else "pop"
                 key_print(data["attributes"].__getattribute__(attr)("parameters"))
                 key_print(data.__getattribute__(attr)("appliance"))
-                key_print(data.__getattribute__(attr)("commands"))
                 key_print(data)
                 pretty_print(create_command(device.commands, concat=True))
             else:
