@@ -94,7 +94,7 @@ class HonParameterEnum(HonParameter):
 
     @property
     def values(self):
-        return sorted([str(value) for value in self._values])
+        return [str(value) for value in self._values]
 
     @property
     def value(self):
@@ -115,6 +115,7 @@ class HonParameterProgram(HonParameterEnum):
         self._value = command._program
         self._values = command._multi
         self._typology = "enum"
+        self._filter = ""
 
     @property
     def value(self):
@@ -126,3 +127,15 @@ class HonParameterProgram(HonParameterEnum):
             self._command.set_program(value)
         else:
             raise ValueError(f"Allowed values {self._values}")
+
+    @property
+    def filter(self):
+        return self._filter
+
+    @filter.setter
+    def filter(self, filter):
+        self._filter = filter
+
+    @property
+    def values(self):
+        return sorted([str(value) for value in self._values if not self._filter or self._filter in str(value)])

@@ -18,7 +18,7 @@ class HonDevice:
         self._attributes = {}
 
         try:
-            self._extra = importlib.import_module(f'pyhon.appliances.{self.appliance_type.lower()}')
+            self._extra = importlib.import_module(f'pyhon.appliances.{self.appliance_type.lower()}').Appliance()
         except ModuleNotFoundError:
             self._extra = None
 
@@ -124,6 +124,8 @@ class HonDevice:
         for name, command in self._commands.items():
             for key, setting in command.settings.items():
                 result[f"{name}.{key}"] = setting
+        if self._extra:
+            return self._extra.settings(result)
         return result
 
     @property
@@ -150,5 +152,5 @@ class HonDevice:
         result = {"attributes": self.attributes, "appliance": self.appliance, "statistics": self.statistics,
                   **self.parameters}
         if self._extra:
-            return result | self._extra.Appliance(result).get()
+            return self._extra.data(result)
         return result
