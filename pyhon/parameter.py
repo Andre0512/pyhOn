@@ -1,3 +1,6 @@
+import re
+
+
 class HonParameter:
     def __init__(self, key, attributes):
         self._key = key
@@ -138,4 +141,8 @@ class HonParameterProgram(HonParameterEnum):
 
     @property
     def values(self):
-        return sorted([str(value) for value in self._values if not self._filter or self._filter in str(value)])
+        values = []
+        for value in self._values:
+            if not self._filter or re.findall(self._filter, str(value)):
+                values.append(str(value))
+        return sorted(values)
