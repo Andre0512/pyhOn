@@ -1,4 +1,9 @@
-from pyhon.parameter import HonParameterFixed, HonParameterEnum, HonParameterRange, HonParameterProgram
+from pyhon.parameter import (
+    HonParameterFixed,
+    HonParameterEnum,
+    HonParameterRange,
+    HonParameterProgram,
+)
 
 
 class HonCommand:
@@ -10,7 +15,9 @@ class HonCommand:
         self._program = program
         self._description = attributes.get("description", "")
         self._parameters = self._create_parameters(attributes.get("parameters", {}))
-        self._ancillary_parameters = self._create_parameters(attributes.get("ancillaryParameters", {}))
+        self._ancillary_parameters = self._create_parameters(
+            attributes.get("ancillaryParameters", {})
+        )
 
     def __repr__(self):
         return f"{self._name} command"
@@ -35,11 +42,18 @@ class HonCommand:
 
     @property
     def ancillary_parameters(self):
-        return {key: parameter.value for key, parameter in self._ancillary_parameters.items()}
+        return {
+            key: parameter.value
+            for key, parameter in self._ancillary_parameters.items()
+        }
 
     async def send(self):
-        parameters = {name: parameter.value for name, parameter in self._parameters.items()}
-        return await self._connector.send_command(self._device, self._name, parameters, self.ancillary_parameters)
+        parameters = {
+            name: parameter.value for name, parameter in self._parameters.items()
+        }
+        return await self._connector.send_command(
+            self._device, self._name, parameters, self.ancillary_parameters
+        )
 
     def get_programs(self):
         return self._multi
@@ -61,11 +75,16 @@ class HonCommand:
     def setting_keys(self):
         if not self._multi:
             return self._get_settings_keys()
-        result = [key for cmd in self._multi.values() for key in self._get_settings_keys(cmd)]
+        result = [
+            key for cmd in self._multi.values() for key in self._get_settings_keys(cmd)
+        ]
         return list(set(result + ["program"]))
 
     @property
     def settings(self):
         """Parameters with typology enum and range"""
-        return {s: self._parameters.get(s) for s in self.setting_keys if self._parameters.get(s) is not None}
-
+        return {
+            s: self._parameters.get(s)
+            for s in self.setting_keys
+            if self._parameters.get(s) is not None
+        }

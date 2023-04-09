@@ -25,8 +25,12 @@ def get_arguments():
     keys = subparser.add_parser("keys", help="print as key format")
     keys.add_argument("keys", help="print as key format", action="store_true")
     keys.add_argument("--all", help="print also full keys", action="store_true")
-    translate = subparser.add_parser("translate", help="print available translation keys")
-    translate.add_argument("translate", help="language (de, en, fr...)", metavar="LANGUAGE")
+    translate = subparser.add_parser(
+        "translate", help="print available translation keys"
+    )
+    translate.add_argument(
+        "translate", help="language (de, en, fr...)", metavar="LANGUAGE"
+    )
     translate.add_argument("--json", help="print as json", action="store_true")
     return vars(parser.parse_args())
 
@@ -51,7 +55,9 @@ def pretty_print(data, key="", intend=0, is_list=False):
             else:
                 pretty_print(value, key=key, intend=intend)
     else:
-        print(f"{'  ' * intend}{'- ' if is_list else ''}{key}{': ' if key else ''}{data}")
+        print(
+            f"{'  ' * intend}{'- ' if is_list else ''}{key}{': ' if key else ''}{data}"
+        )
 
 
 def key_print(data, key="", start=True):
@@ -90,7 +96,12 @@ async def translate(language, json_output=False):
     if json_output:
         print(json.dumps(keys, indent=4))
     else:
-        clean_keys = json.dumps(keys).replace("\\n", "\\\\n").replace("\\\\r", "").replace("\\r", "")
+        clean_keys = (
+            json.dumps(keys)
+            .replace("\\n", "\\\\n")
+            .replace("\\\\r", "")
+            .replace("\\r", "")
+        )
         keys = json.loads(clean_keys)
         pretty_print(keys)
 
@@ -126,5 +137,5 @@ def start():
         print("Aborted.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start()

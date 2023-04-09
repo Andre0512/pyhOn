@@ -71,7 +71,7 @@ class HonAPI:
         params = {
             "macAddress": appliance.mac_address,
             "applianceType": appliance.appliance_type,
-            "category": "CYCLE"
+            "category": "CYCLE",
         }
         url = f"{const.API_URL}/commands/v1/context"
         async with self._hon.get(url, params=params) as response:
@@ -80,7 +80,7 @@ class HonAPI:
     async def load_statistics(self, appliance: HonAppliance):
         params = {
             "macAddress": appliance.mac_address,
-            "applianceType": appliance.appliance_type
+            "applianceType": appliance.appliance_type,
         }
         url = f"{const.API_URL}/commands/v1/statistics"
         async with self._hon.get(url, params=params) as response:
@@ -98,11 +98,11 @@ class HonAPI:
             "attributes": {
                 "channel": "mobileApp",
                 "origin": "standardProgram",
-                "energyLabel": "0"
+                "energyLabel": "0",
             },
             "ancillaryParameters": ancillary_parameters,
             "parameters": parameters,
-            "applianceType": appliance.appliance_type
+            "applianceType": appliance.appliance_type,
         }
         url = f"{const.API_URL}/commands/v1/send"
         async with self._hon.post(url, json=data) as resp:
@@ -125,9 +125,9 @@ class HonAPI:
             "languageCode": language,
             "beta": beta,
             "appVersion": const.APP_VERSION,
-            "os": const.OS
+            "os": const.OS,
         }
-        payload = json.dumps(payload, separators=(',', ':'))
+        payload = json.dumps(payload, separators=(",", ":"))
         async with self._hon_anonymous.post(url, data=payload) as response:
             if (result := await response.json()) and (data := result.get("payload")):
                 return data

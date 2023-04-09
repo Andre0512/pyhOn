@@ -32,5 +32,10 @@ class HonDevice:
         return self._mobile_id
 
     def get(self):
-        return {"appVersion": self.app_version, "mobileId": self.mobile_id, "osVersion": self.os_version,
-                "os": self.os, "deviceModel": self.device_model}
+        return {
+            "appVersion": self.app_version,
+            "mobileId": self.mobile_id,
+            "osVersion": self.os_version,
+            "os": self.os,
+            "deviceModel": self.device_model,
+        }

@@ -59,7 +59,10 @@ class HonConnectionHandler(HonBaseConnectionHandler):
         return self
 
     async def _check_headers(self, headers):
-        if "cognito-token" not in self._request_headers or "id-token" not in self._request_headers:
+        if (
+            "cognito-token" not in self._request_headers
+            or "id-token" not in self._request_headers
+        ):
             if await self._auth.authorize():
                 self._request_headers["cognito-token"] = self._auth.cognito_token
                 self._request_headers["id-token"] = self._auth.id_token
@@ -76,19 +79,33 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                 await self._auth.refresh()
                 yield await self._intercept(method, *args, loop=loop + 1, **kwargs)
             elif response.status == 403 and loop < 2:
-                _LOGGER.warning("%s - Error %s - %s", response.request_info.url, response.status, await response.text())
+                _LOGGER.warning(
+                    "%s - Error %s - %s",
+                    response.request_info.url,
+                    response.status,
+                    await response.text(),
+                )
                 await self.create()
                 yield await self._intercept(method, *args, loop=loop + 1, **kwargs)
             elif loop >= 2:
-                _LOGGER.error("%s - Error %s - %s", response.request_info.url, response.status, await response.text())
+                _LOGGER.error(
+                    "%s - Error %s - %s",
+                    response.request_info.url,
+                    response.status,
+                    await response.text(),
+                )
                 raise PermissionError("Login failure")
             else:
                 try:
                     await response.json()
                     yield response
                 except json.JSONDecodeError:
-                    _LOGGER.warning("%s - JsonDecodeError %s - %s", response.request_info.url, response.status,
-                                    await response.text())
+                    _LOGGER.warning(
+                        "%s - JsonDecodeError %s - %s",
+                        response.request_info.url,
+                        response.status,
+                        await response.text(),
+                    )
                     yield {}
 
     @asynccontextmanager

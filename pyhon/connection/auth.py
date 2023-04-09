@@ -45,26 +45,37 @@ class HonAuth:
         params = {
             "response_type": "token+id_token",
             "client_id": const.CLIENT_ID,
-            "redirect_uri": urllib.parse.quote(f"{const.APP}://mobilesdk/detect/oauth/done"),
+            "redirect_uri": urllib.parse.quote(
+                f"{const.APP}://mobilesdk/detect/oauth/done"
+            ),
             "display": "touch",
             "scope": "api openid refresh_token web",
-            "nonce": nonce
+            "nonce": nonce,
         }
         params = "&".join([f"{k}={v}" for k, v in params.items()])
-        async with self._session.get(f"{const.AUTH_API}/services/oauth2/authorize/expid_Login?{params}") as resp:
+        async with self._session.get(
+            f"{const.AUTH_API}/services/oauth2/authorize/expid_Login?{params}"
+        ) as resp:
             if not (login_url := re.findall("url = '(.+?)'", await resp.text())):
                 return False
         async with self._session.get(login_url[0], allow_redirects=False) as redirect1:
             if not (url := redirect1.headers.get("Location")):
                 return False
         async with self._session.get(url, allow_redirects=False) as redirect2:
-            if not (url := redirect2.headers.get("Location") + "&System=IoT_Mobile_App&RegistrationSubChannel=hOn"):
+            if not (
+                url := redirect2.headers.get("Location")
+                + "&System=IoT_Mobile_App&RegistrationSubChannel=hOn"
+            ):
                 return False
         async with self._session.get(URL(url, encoded=True)) as login_screen:
-            if context := re.findall('"fwuid":"(.*?)","loaded":(\\{.*?})', await login_screen.text()):
+            if context := re.findall(
+                '"fwuid":"(.*?)","loaded":(\\{.*?})', await login_screen.text()
+            ):
                 fw_uid, loaded_str = context[0]
                 loaded = json.loads(loaded_str)
-                login_url = login_url[0].replace("/".join(const.AUTH_API.split("/")[:-1]), "")
+                login_url = login_url[0].replace(
+                    "/".join(const.AUTH_API.split("/")[:-1]), ""
+                )
                 return fw_uid, loaded, login_url
         return False
 
@@ -79,8 +90,10 @@ class HonAuth:
                         "params": {
                             "username": self._email,
                             "password": self._password,
-                            "startUrl": parse.unquote(login_url.split("startURL=")[-1]).split("%3D")[0]
-                        }
+                            "startUrl": parse.unquote(
+                                login_url.split("startURL=")[-1]
+                            ).split("%3D")[0],
+                        },
                     }
                 ]
             },
@@ -91,23 +104,28 @@ class HonAuth:
                 "loaded": loaded,
                 "dn": [],
                 "globals": {},
-                "uad": False},
+                "uad": False,
+            },
             "aura.pageURI": login_url,
-            "aura.token": None}
-
+            "aura.token": None,
+        }
         params = {"r": 3, "other.LightningLoginCustom.login": 1}
         async with self._session.post(
-                const.AUTH_API + "/s/sfsites/aura",
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data="&".join(f"{k}={json.dumps(v)}" for k, v in data.items()),
-                params=params
+            const.AUTH_API + "/s/sfsites/aura",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data="&".join(f"{k}={json.dumps(v)}" for k, v in data.items()),
+            params=params,
         ) as response:
             if response.status == 200:
                 try:
-                    return (await response.json())["events"][0]["attributes"]["values"]["url"]
+                    return (await response.json())["events"][0]["attributes"]["values"][
+                        "url"
+                    ]
                 except json.JSONDecodeError:
                     pass
-            _LOGGER.error("Unable to login: %s\n%s", response.status, await response.text())
+            _LOGGER.error(
+                "Unable to login: %s\n%s", response.status, await response.text()
+            )
             return ""
 
     async def _get_token(self, url):
@@ -147,7 +165,9 @@ class HonAuth:
 
         post_headers = {"id-token": self._id_token}
         data = self._device.get()
-        async with self._session.post(f"{const.API_URL}/auth/v1/login", headers=post_headers, json=data) as resp:
+        async with self._session.post(
+            f"{const.API_URL}/auth/v1/login", headers=post_headers, json=data
+        ) as resp:
             try:
                 json_data = await resp.json()
             except json.JSONDecodeError:
@@ -160,13 +180,13 @@ class HonAuth:
         params = {
             "client_id": const.CLIENT_ID,
             "refresh_token": self._refresh_token,
-            "grant_type": "refresh_token"
+            "grant_type": "refresh_token",
         }
-        async with self._session.post(f"{const.AUTH_API}/services/oauth2/token", params=params) as resp:
+        async with self._session.post(
+            f"{const.AUTH_API}/services/oauth2/token", params=params
+        ) as resp:
             if resp.status >= 400:
                 return False
             data = await resp.json()
             self._id_token = data["id_token"]
             self._access_token = data["access_token"]
-
-

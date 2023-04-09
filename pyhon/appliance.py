@@ -18,7 +18,9 @@ class HonAppliance:
         self._attributes = {}
 
         try:
-            self._extra = importlib.import_module(f'pyhon.appliances.{self.appliance_type.lower()}').Appliance()
+            self._extra = importlib.import_module(
+                f"pyhon.appliances.{self.appliance_type.lower()}"
+            ).Appliance()
         except ModuleNotFoundError:
             self._extra = None
 
@@ -87,7 +89,14 @@ class HonAppliance:
     async def _recover_last_command_states(self, commands):
         command_history = await self._api.command_history(self)
         for name, command in commands.items():
-            last = next((index for (index, d) in enumerate(command_history) if d.get("command", {}).get("commandName") == name), None)
+            last = next(
+                (
+                    index
+                    for (index, d) in enumerate(command_history)
+                    if d.get("command", {}).get("commandName") == name
+                ),
+                None,
+            )
             if last is None:
                 continue
             parameters = command_history[last].get("command", {}).get("parameters", {})
@@ -95,7 +104,10 @@ class HonAppliance:
                 command.set_program(parameters.pop("program").split(".")[-1].lower())
                 command = self.commands[name]
             for key, data in command.settings.items():
-                if not isinstance(data, HonParameterFixed) and parameters.get(key) is not None:
+                if (
+                    not isinstance(data, HonParameterFixed)
+                    and parameters.get(key) is not None
+                ):
                     with suppress(ValueError):
                         data.value = parameters.get(key)
 
@@ -112,7 +124,9 @@ class HonAppliance:
                 multi = {}
                 for program, attr2 in attr.items():
                     program = program.split(".")[-1].lower()
-                    cmd = HonCommand(command, attr2, self._api, self, multi=multi, program=program)
+                    cmd = HonCommand(
+                        command, attr2, self._api, self, multi=multi, program=program
+                    )
                     multi[program] = cmd
                     commands[command] = cmd
         self._commands = commands
@@ -149,8 +163,12 @@ class HonAppliance:
 
     @property
     def data(self):
-        result = {"attributes": self.attributes, "appliance": self.info, "statistics": self.statistics,
-                  **self.parameters}
+        result = {
+            "attributes": self.attributes,
+            "appliance": self.info,
+            "statistics": self.statistics,
+            **self.parameters,
+        }
         if self._extra:
             return self._extra.data(result)
         return result

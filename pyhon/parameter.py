@@ -79,7 +79,9 @@ class HonParameterRange(HonParameter):
         if self._min <= value <= self._max and not value % self._step:
             self._value = value
         else:
-            raise ValueError(f"Allowed: min {self._min} max {self._max} step {self._step}")
+            raise ValueError(
+                f"Allowed: min {self._min} max {self._max} step {self._step}"
+            )
 
 
 class HonParameterEnum(HonParameter):
@@ -138,4 +140,10 @@ class HonParameterProgram(HonParameterEnum):
 
     @property
     def values(self):
-        return sorted([str(value) for value in self._values if not self._filter or self._filter in str(value)])
+        return sorted(
+            [
+                str(value)
+                for value in self._values
+                if not self._filter or self._filter in str(value)
+            ]
+        )

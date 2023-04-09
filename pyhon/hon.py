@@ -29,8 +29,11 @@ class Hon:
             appliance = HonAppliance(self._api, appliance)
             if appliance.mac_address is None:
                 continue
-            await asyncio.gather(*[
-                appliance.load_attributes(),
-                appliance.load_commands(),
-                appliance.load_statistics()])
+            await asyncio.gather(
+                *[
+                    appliance.load_attributes(),
+                    appliance.load_commands(),
+                    appliance.load_statistics(),
+                ]
+            )
             self._appliances.append(appliance)
