@@ -1,12 +1,10 @@
-import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import List
 
 from pyhon import const
 from pyhon.appliance import HonAppliance
-from pyhon.connection.connection import HonConnectionHandler, HonAnonymousConnectionHandler
+from pyhon.connection.handler import HonConnectionHandler, HonAnonymousConnectionHandler
 
 _LOGGER = logging.getLogger()
 
@@ -16,53 +14,34 @@ class HonAPI:
         super().__init__()
         self._email = email
         self._password = password
-        self._devices = []
         self._hon = None
         self._hon_anonymous = HonAnonymousConnectionHandler()
 
     async def __aenter__(self):
-        self._hon = HonConnectionHandler(self._email, self._password)
-        await self._hon.create()
-        await self.setup()
-
-        return self
+        return await self.create()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self._hon.close()
 
-    @property
-    def devices(self) -> List[HonAppliance]:
-        return self._devices
+    async def create(self):
+        self._hon = await HonConnectionHandler(self._email, self._password).create()
+        return self
 
-    async def setup(self):
+    async def load_appliances(self):
         async with self._hon.get(f"{const.API_URL}/commands/v1/appliance") as resp:
-            try:
-                appliances = (await resp.json())["payload"]["appliances"]
-                for appliance in appliances:
-                    device = HonAppliance(self, appliance)
-                    if device.mac_address is None:
-                        continue
-                    await asyncio.gather(*[
-                        device.load_attributes(),
-                        device.load_commands(),
-                        device.load_statistics()])
-                    self._devices.append(device)
-            except json.JSONDecodeError:
-                _LOGGER.error("No JSON Data after GET: %s", await resp.text())
-                return False
-        return True
+            return await resp.json()
 
-    async def load_commands(self, device: HonAppliance):
+    async def load_commands(self, appliance: HonAppliance):
         params = {
-            "applianceType": device.appliance_type,
-            "code": device.appliance["code"],
-            "applianceModelId": device.appliance_model_id,
-            "firmwareId": device.appliance["eepromId"],
-            "macAddress": device.mac_address,
-            "fwVersion": device.appliance["fwVersion"],
+            "applianceType": appliance.appliance_type,
+            "code": appliance.info["code"],
+            "applianceModelId": appliance.appliance_model_id,
+            "firmwareId": appliance.info["eepromId"],
+            "macAddress": appliance.mac_address,
+            "fwVersion": appliance.info["fwVersion"],
             "os": const.OS,
             "appVersion": const.APP_VERSION,
-            "series": device.appliance["series"],
+            "series": appliance.info["series"],
         }
         url = f"{const.API_URL}/commands/v1/retrieve"
         async with self._hon.get(url, params=params) as response:
@@ -71,51 +50,51 @@ class HonAPI:
                 return {}
             return result
 
-    async def command_history(self, device: HonAppliance):
-        url = f"{const.API_URL}/commands/v1/appliance/{device.mac_address}/history"
+    async def command_history(self, appliance: HonAppliance):
+        url = f"{const.API_URL}/commands/v1/appliance/{appliance.mac_address}/history"
         async with self._hon.get(url) as response:
             result = await response.json()
             if not result or not result.get("payload"):
                 return {}
             return result["payload"]["history"]
 
-    async def last_activity(self, device: HonAppliance):
+    async def last_activity(self, appliance: HonAppliance):
         url = f"{const.API_URL}/commands/v1/retrieve-last-activity"
-        params = {"macAddress": device.mac_address}
+        params = {"macAddress": appliance.mac_address}
         async with self._hon.get(url, params=params) as response:
             result = await response.json()
             if result and (activity := result.get("attributes")):
                 return activity
         return {}
 
-    async def load_attributes(self, device: HonAppliance):
+    async def load_attributes(self, appliance: HonAppliance):
         params = {
-            "macAddress": device.mac_address,
-            "applianceType": device.appliance_type,
+            "macAddress": appliance.mac_address,
+            "applianceType": appliance.appliance_type,
             "category": "CYCLE"
         }
         url = f"{const.API_URL}/commands/v1/context"
         async with self._hon.get(url, params=params) as response:
             return (await response.json()).get("payload", {})
 
-    async def load_statistics(self, device: HonAppliance):
+    async def load_statistics(self, appliance: HonAppliance):
         params = {
-            "macAddress": device.mac_address,
-            "applianceType": device.appliance_type
+            "macAddress": appliance.mac_address,
+            "applianceType": appliance.appliance_type
         }
         url = f"{const.API_URL}/commands/v1/statistics"
         async with self._hon.get(url, params=params) as response:
             return (await response.json()).get("payload", {})
 
-    async def send_command(self, device, command, parameters, ancillary_parameters):
+    async def send_command(self, appliance, command, parameters, ancillary_parameters):
         now = datetime.utcnow().isoformat()
         data = {
-            "macAddress": device.mac_address,
+            "macAddress": appliance.mac_address,
             "timestamp": f"{now[:-3]}Z",
             "commandName": command,
-            "transactionId": f"{device.mac_address}_{now[:-3]}Z",
-            "applianceOptions": device.commands_options,
-            "device": self._hon.device.get(),
+            "transactionId": f"{appliance.mac_address}_{now[:-3]}Z",
+            "applianceOptions": appliance.commands_options,
+            "appliance": self._hon.device.get(),
             "attributes": {
                 "channel": "mobileApp",
                 "origin": "standardProgram",
@@ -123,15 +102,12 @@ class HonAPI:
             },
             "ancillaryParameters": ancillary_parameters,
             "parameters": parameters,
-            "applianceType": device.appliance_type
+            "applianceType": appliance.appliance_type
         }
         url = f"{const.API_URL}/commands/v1/send"
         async with self._hon.post(url, json=data) as resp:
-            try:
-                json_data = await resp.json()
-            except json.JSONDecodeError:
-                return False
-            if json_data["payload"]["resultCode"] == "0":
+            json_data = await resp.json()
+            if json_data.get("payload", {}).get("resultCode") == "0":
                 return True
         return False
 
@@ -164,3 +140,6 @@ class HonAPI:
                 if result := await response.json():
                     return result
         return {}
+
+    async def close(self):
+        await self._hon.close()

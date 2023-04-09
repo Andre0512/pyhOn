@@ -1,3 +1,4 @@
+import json
 from contextlib import asynccontextmanager
 
 import aiohttp
@@ -15,14 +16,14 @@ class HonBaseConnectionHandler:
         self._auth = None
 
     async def __aenter__(self):
-        await self.create()
-        return self
+        return await self.create()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
     async def create(self):
         self._session = aiohttp.ClientSession(headers=self._HEADERS)
+        return self
 
     @asynccontextmanager
     async def get(self, *args, **kwargs):
@@ -55,6 +56,7 @@ class HonConnectionHandler(HonBaseConnectionHandler):
     async def create(self):
         await super().create()
         self._auth = HonAuth(self._session, self._email, self._password, self._device)
+        return self
 
     async def _check_headers(self, headers):
         if "cognito-token" not in self._request_headers or "id-token" not in self._request_headers:
@@ -81,7 +83,13 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                 _LOGGER.error("%s - Error %s - %s", response.request_info.url, response.status, await response.text())
                 raise PermissionError("Login failure")
             else:
-                yield response
+                try:
+                    await response.json()
+                    yield response
+                except json.JSONDecodeError:
+                    _LOGGER.warning("%s - JsonDecodeError %s - %s", response.request_info.url, response.status,
+                                    await response.text())
+                    yield {}
 
     @asynccontextmanager
     async def get(self, *args, **kwargs):

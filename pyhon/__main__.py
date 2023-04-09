@@ -11,7 +11,7 @@ from pprint import pprint
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pyhon import HonAPI
+from pyhon import Hon, HonAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,8 +104,8 @@ async def main():
         user = input("User for hOn account: ")
     if not (password := args["password"]):
         password = getpass("Password for hOn account: ")
-    async with HonAPI(user, password) as hon:
-        for device in hon.devices:
+    async with Hon(user, password) as hon:
+        for device in hon.appliances:
             print("=" * 10, device.appliance_type, "-", device.nick_name, "=" * 10)
             if args.get("keys"):
                 data = device.data.copy()
