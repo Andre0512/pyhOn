@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import re
@@ -146,7 +147,7 @@ class HonAuth:
         if not await self._get_token(url):
             return False
 
-        post_headers = {"Content-Type": "application/json", "id-token": self._id_token}
+        post_headers = {"id-token": self._id_token}
         data = self._device.get()
         async with self._session.post(f"{const.API_URL}/auth/v1/login", headers=post_headers, json=data) as resp:
             try:
@@ -156,3 +157,18 @@ class HonAuth:
                 return False
             self._cognito_token = json_data["cognitoUser"]["Token"]
         return True
+
+    async def refresh(self):
+        params = {
+            "client_id": const.CLIENT_ID,
+            "refresh_token": self._refresh_token,
+            "grant_type": "refresh_token"
+        }
+        async with self._session.post(f"{const.AUTH_API}/services/oauth2/token", params=params) as resp:
+            if resp.status >= 400:
+                return False
+            data = await resp.json()
+            self._id_token = data["id_token"]
+            self._access_token = data["access_token"]
+
+
