@@ -1,1 +1,1 @@
-from .api import HonConnection
+from .connection.api import HonAPI

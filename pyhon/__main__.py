@@ -11,7 +11,7 @@ from pprint import pprint
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pyhon import HonConnection
+from pyhon import HonAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def create_command(commands, concat=False):
 
 
 async def translate(language, json_output=False):
-    async with HonConnection() as hon:
+    async with HonAPI() as hon:
         keys = await hon.translation_keys(language)
     if json_output:
         print(json.dumps(keys, indent=4))
@@ -104,7 +104,7 @@ async def main():
         user = input("User for hOn account: ")
     if not (password := args["password"]):
         password = getpass("Password for hOn account: ")
-    async with HonConnection(user, password) as hon:
+    async with HonAPI(user, password) as hon:
         for device in hon.devices:
             print("=" * 10, device.appliance_type, "-", device.nick_name, "=" * 10)
             if args.get("keys"):

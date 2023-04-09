@@ -5,7 +5,7 @@ from pyhon.commands import HonCommand
 from pyhon.parameter import HonParameterFixed
 
 
-class HonDevice:
+class HonAppliance:
     def __init__(self, connector, appliance):
         if attributes := appliance.get("attributes"):
             appliance["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
