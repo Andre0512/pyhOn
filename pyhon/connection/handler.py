@@ -27,11 +27,11 @@ class HonBaseConnectionHandler:
 
     @asynccontextmanager
     async def get(self, *args, **kwargs):
-        raise NotImplemented
+        raise NotImplementedError
 
     @asynccontextmanager
     async def post(self, *args, **kwargs):
-        raise NotImplemented
+        raise NotImplementedError
 
     async def close(self):
         await self._session.close()

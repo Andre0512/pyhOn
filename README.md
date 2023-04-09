@@ -47,28 +47,28 @@ settings:
 ### List devices
 ```python
 import asyncio
-from pyhon import HonConnection
+from pyhon import Hon
 
 async def devices_example():
-    async with HonConnection(USER, PASSWORD) as hon:
-        for device in hon.devices:
-            print(device.nick_name)
+    async with Hon(USER, PASSWORD) as hon:
+        for appliance in hon.appliances:
+            print(appliance.nick_name)
 
 asyncio.run(devices_example())
 ```
 
 ### Execute a command
 ```python
-async with HonConnection(USER, PASSWORD) as hon:
-    washing_machine = hon.devices[0]
+async with Hon(USER, PASSWORD) as hon:
+    washing_machine = hon.appliances[0]
     pause_command = washing_machine.commands["pauseProgram"]
     await pause_command.send()
 ```
 
 ### Set command parameter
 ```python
-async with HonConnection(USER, PASSWORD) as hon:
-    washing_machine = hon.devices[0]
+async with Hon(USER, PASSWORD) as hon:
+    washing_machine = hon.appliances[0]
     start_command = washing_machine.commands["startProgram"]
     for name, setting in start_command.settings:
         print("Setting", name)

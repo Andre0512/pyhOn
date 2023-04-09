@@ -6,7 +6,6 @@ import logging
 import sys
 from getpass import getpass
 from pathlib import Path
-from pprint import pprint
 
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent.parent))
