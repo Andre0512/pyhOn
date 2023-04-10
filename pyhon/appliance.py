@@ -5,12 +5,12 @@ from pyhon.commands import HonCommand
 from pyhon.parameter import HonParameterFixed
 
 
-class HonDevice:
-    def __init__(self, connector, appliance):
-        if attributes := appliance.get("attributes"):
-            appliance["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
-        self._appliance = appliance
-        self._connector = connector
+class HonAppliance:
+    def __init__(self, api, info):
+        if attributes := info.get("attributes"):
+            info["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
+        self._info = info
+        self._api = api
         self._appliance_model = {}
 
         self._commands = {}
@@ -18,7 +18,9 @@ class HonDevice:
         self._attributes = {}
 
         try:
-            self._extra = importlib.import_module(f'pyhon.appliances.{self.appliance_type.lower()}').Appliance()
+            self._extra = importlib.import_module(
+                f"pyhon.appliances.{self.appliance_type.lower()}"
+            ).Appliance()
         except ModuleNotFoundError:
             self._extra = None
 
@@ -36,7 +38,7 @@ class HonDevice:
                 return self.data[item]
             if item in self.attributes["parameters"]:
                 return self.attributes["parameters"].get(item)
-            return self.appliance[item]
+            return self.info[item]
 
     def get(self, item, default=None):
         try:
@@ -46,23 +48,23 @@ class HonDevice:
 
     @property
     def appliance_model_id(self):
-        return self._appliance.get("applianceModelId")
+        return self._info.get("applianceModelId")
 
     @property
     def appliance_type(self):
-        return self._appliance.get("applianceTypeName")
+        return self._info.get("applianceTypeName")
 
     @property
     def mac_address(self):
-        return self._appliance.get("macAddress")
+        return self._info.get("macAddress")
 
     @property
     def model_name(self):
-        return self._appliance.get("modelName")
+        return self._info.get("modelName")
 
     @property
     def nick_name(self):
-        return self._appliance.get("nickName")
+        return self._info.get("nickName")
 
     @property
     def commands_options(self):
@@ -81,13 +83,20 @@ class HonDevice:
         return self._statistics
 
     @property
-    def appliance(self):
-        return self._appliance
+    def info(self):
+        return self._info
 
     async def _recover_last_command_states(self, commands):
-        command_history = await self._connector.command_history(self)
+        command_history = await self._api.command_history(self)
         for name, command in commands.items():
-            last = next((index for (index, d) in enumerate(command_history) if d.get("command", {}).get("commandName") == name), None)
+            last = next(
+                (
+                    index
+                    for (index, d) in enumerate(command_history)
+                    if d.get("command", {}).get("commandName") == name
+                ),
+                None,
+            )
             if last is None:
                 continue
             parameters = command_history[last].get("command", {}).get("parameters", {})
@@ -95,24 +104,29 @@ class HonDevice:
                 command.set_program(parameters.pop("program").split(".")[-1].lower())
                 command = self.commands[name]
             for key, data in command.settings.items():
-                if not isinstance(data, HonParameterFixed) and parameters.get(key) is not None:
+                if (
+                    not isinstance(data, HonParameterFixed)
+                    and parameters.get(key) is not None
+                ):
                     with suppress(ValueError):
                         data.value = parameters.get(key)
 
     async def load_commands(self):
-        raw = await self._connector.load_commands(self)
+        raw = await self._api.load_commands(self)
         self._appliance_model = raw.pop("applianceModel")
         for item in ["settings", "options", "dictionaryId"]:
             raw.pop(item)
         commands = {}
         for command, attr in raw.items():
             if "parameters" in attr:
-                commands[command] = HonCommand(command, attr, self._connector, self)
+                commands[command] = HonCommand(command, attr, self._api, self)
             elif "parameters" in attr[list(attr)[0]]:
                 multi = {}
                 for program, attr2 in attr.items():
                     program = program.split(".")[-1].lower()
-                    cmd = HonCommand(command, attr2, self._connector, self, multi=multi, program=program)
+                    cmd = HonCommand(
+                        command, attr2, self._api, self, multi=multi, program=program
+                    )
                     multi[program] = cmd
                     commands[command] = cmd
         self._commands = commands
@@ -137,20 +151,24 @@ class HonDevice:
         return result
 
     async def load_attributes(self):
-        self._attributes = await self._connector.load_attributes(self)
+        self._attributes = await self._api.load_attributes(self)
         for name, values in self._attributes.pop("shadow").get("parameters").items():
             self._attributes.setdefault("parameters", {})[name] = values["parNewVal"]
 
     async def load_statistics(self):
-        self._statistics = await self._connector.load_statistics(self)
+        self._statistics = await self._api.load_statistics(self)
 
     async def update(self):
         await self.load_attributes()
 
     @property
     def data(self):
-        result = {"attributes": self.attributes, "appliance": self.appliance, "statistics": self.statistics,
-                  **self.parameters}
+        result = {
+            "attributes": self.attributes,
+            "appliance": self.info,
+            "statistics": self.statistics,
+            **self.parameters,
+        }
         if self._extra:
             return self._extra.data(result)
         return result

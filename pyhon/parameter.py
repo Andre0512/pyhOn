@@ -82,7 +82,9 @@ class HonParameterRange(HonParameter):
         if self._min <= value <= self._max and not value % self._step:
             self._value = value
         else:
-            raise ValueError(f"Allowed: min {self._min} max {self._max} step {self._step}")
+            raise ValueError(
+                f"Allowed: min {self._min} max {self._max} step {self._step}"
+            )
 
 
 class HonParameterEnum(HonParameter):
