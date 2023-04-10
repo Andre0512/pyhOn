@@ -11,8 +11,8 @@ from pyhon.connection.device import HonDevice
 class HonBaseConnectionHandler:
     _HEADERS = {"user-agent": const.USER_AGENT, "Content-Type": "application/json"}
 
-    def __init__(self):
-        self._session = None
+    def __init__(self, session=None):
+        self._session = session
         self._auth = None
 
     async def __aenter__(self):
@@ -26,20 +26,26 @@ class HonBaseConnectionHandler:
         return self
 
     @asynccontextmanager
-    async def get(self, *args, **kwargs):
+    async def _intercept(self, method, *args, loop=0, **kwargs):
         raise NotImplementedError
 
     @asynccontextmanager
+    async def get(self, *args, **kwargs):
+        async with self._intercept(self._session.get, *args, **kwargs) as response:
+            yield response
+
+    @asynccontextmanager
     async def post(self, *args, **kwargs):
-        raise NotImplementedError
+        async with self._intercept(self._session.post, *args, **kwargs) as response:
+            yield response
 
     async def close(self):
         await self._session.close()
 
 
 class HonConnectionHandler(HonBaseConnectionHandler):
-    def __init__(self, email, password):
-        super().__init__()
+    def __init__(self, email, password, session=None):
+        super().__init__(session=session)
         self._device = HonDevice()
         self._email = email
         self._password = password
@@ -108,26 +114,14 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                     )
                     yield {}
 
-    @asynccontextmanager
-    async def get(self, *args, **kwargs):
-        async with self._intercept(self._session.get, *args, **kwargs) as response:
-            yield response
-
-    @asynccontextmanager
-    async def post(self, *args, **kwargs):
-        async with self._intercept(self._session.post, *args, **kwargs) as response:
-            yield response
-
 
 class HonAnonymousConnectionHandler(HonBaseConnectionHandler):
     _HEADERS = HonBaseConnectionHandler._HEADERS | {"x-api-key": const.API_KEY}
 
     @asynccontextmanager
-    async def get(self, *args, **kwargs):
-        async with self._session.post(*args, **kwargs) as response:
-            yield response
-
-    @asynccontextmanager
-    async def post(self, *args, **kwargs):
-        async with self._session.post(*args, **kwargs) as response:
+    async def _intercept(self, method, *args, loop=0, **kwargs):
+        kwargs["headers"] = kwargs.pop("headers", {}) | self._HEADERS
+        async with method(*args, **kwargs) as response:
+            if response.status == 403:
+                print("Can't authorize")
             yield response

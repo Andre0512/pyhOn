@@ -6,19 +6,25 @@ from pyhon.appliance import HonAppliance
 
 
 class Hon:
-    def __init__(self, email, password):
+    def __init__(self, email, password, session=None):
         self._email = email
         self._password = password
+        self._session = session
         self._appliances = []
         self._api = None
 
     async def __aenter__(self):
-        self._api = await HonAPI(self._email, self._password).create()
-        await self.setup()
-        return self
+        return await self.create()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self._api.close()
+        await self.close()
+
+    async def create(self):
+        self._api = await HonAPI(
+            self._email, self._password, session=self._session
+        ).create()
+        await self.setup()
+        return self
 
     @property
     def appliances(self) -> List[HonAppliance]:
@@ -37,3 +43,6 @@ class Hon:
                 ]
             )
             self._appliances.append(appliance)
+
+    async def close(self):
+        await self._api.close()

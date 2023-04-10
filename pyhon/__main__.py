@@ -90,7 +90,7 @@ def create_command(commands, concat=False):
 
 
 async def translate(language, json_output=False):
-    async with HonAPI() as hon:
+    async with HonAPI(anonymous=True) as hon:
         keys = await hon.translation_keys(language)
     if json_output:
         print(json.dumps(keys, indent=4))

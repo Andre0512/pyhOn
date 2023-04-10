@@ -10,24 +10,29 @@ _LOGGER = logging.getLogger()
 
 
 class HonAPI:
-    def __init__(self, email="", password="", anonymous=False) -> None:
+    def __init__(self, email="", password="", anonymous=False, session=None) -> None:
         super().__init__()
         self._email = email
         self._password = password
         self._anonymous = anonymous
         self._hon = None
         self._hon_anonymous = None
+        self._session = session
 
     async def __aenter__(self):
         return await self.create()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self._hon.close()
+        await self.close()
 
     async def create(self):
-        self._hon_anonymous = HonAnonymousConnectionHandler()
+        self._hon_anonymous = await HonAnonymousConnectionHandler(
+            self._session
+        ).create()
         if not self._anonymous:
-            self._hon = await HonConnectionHandler(self._email, self._password).create()
+            self._hon = await HonConnectionHandler(
+                self._email, self._password, self._session
+            ).create()
         return self
 
     async def load_appliances(self):
@@ -145,4 +150,7 @@ class HonAPI:
         return {}
 
     async def close(self):
-        await self._hon.close()
+        if self._hon:
+            await self._hon.close()
+        if self._hon_anonymous:
+            await self._hon_anonymous.close()
