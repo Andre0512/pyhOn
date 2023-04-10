@@ -2,7 +2,10 @@ import re
 
 
 def str_to_float(string):
-    return float(string.replace(",", "."))
+    try:
+        return int(string)
+    except ValueError:
+        return float(str(string.replace(",", ".")))
 
 
 class HonParameter:
