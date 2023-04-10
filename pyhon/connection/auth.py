@@ -3,6 +3,7 @@ import logging
 import re
 import secrets
 import urllib
+from pprint import pformat
 from urllib import parse
 
 from yarl import URL
@@ -118,11 +119,14 @@ class HonAuth:
         ) as response:
             if response.status == 200:
                 try:
-                    return (await response.json())["events"][0]["attributes"]["values"][
-                        "url"
-                    ]
+                    data = await response.json()
+                    return data["events"][0]["attributes"]["values"]["url"]
                 except json.JSONDecodeError:
                     pass
+                except KeyError:
+                    _LOGGER.error(
+                        "Can't get login url - %s", pformat(await response.json())
+                    )
             _LOGGER.error(
                 "Unable to login: %s\n%s", response.status, await response.text()
             )
@@ -133,7 +137,10 @@ class HonAuth:
             if resp.status != 200:
                 _LOGGER.error("Unable to get token: %s", resp.status)
                 return False
-            url = re.findall("href\\s*=\\s*[\"'](.*?)[\"']", await resp.text())
+            url = re.findall("href\\s*=\\s*[\"'](http.+?)[\"']", await resp.text())
+            if not url:
+                _LOGGER.error("Can't get login url - \n%s", await resp.text())
+                raise PermissionError
         async with self._session.get(url[0]) as resp:
             if resp.status != 200:
                 _LOGGER.error("Unable to get token: %s", resp.status)
@@ -188,5 +195,6 @@ class HonAuth:
             if resp.status >= 400:
                 return False
             data = await resp.json()
-            self._id_token = data["id_token"]
-            self._access_token = data["access_token"]
+        self._id_token = data["id_token"]
+        self._access_token = data["access_token"]
+        return True
