@@ -6,6 +6,7 @@ import aiohttp
 from pyhon import const
 from pyhon.connection.auth import HonAuth, _LOGGER
 from pyhon.connection.device import HonDevice
+from pyhon.exceptions import HonAuthenticationError
 
 
 class HonBaseConnectionHandler:
@@ -50,9 +51,9 @@ class HonConnectionHandler(HonBaseConnectionHandler):
         self._email = email
         self._password = password
         if not self._email:
-            raise PermissionError("Login-Error - An email address must be specified")
+            raise HonAuthenticationError("An email address must be specified")
         if not self._password:
-            raise PermissionError("Login-Error - A password address must be specified")
+            raise HonAuthenticationError("A password address must be specified")
         self._request_headers = {}
 
     @property
@@ -73,7 +74,7 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                 self._request_headers["cognito-token"] = self._auth.cognito_token
                 self._request_headers["id-token"] = self._auth.id_token
             else:
-                raise PermissionError("Can't Login")
+                raise HonAuthenticationError("Can't login")
         return {h: v for h, v in self._request_headers.items() if h not in headers}
 
     @asynccontextmanager
@@ -100,7 +101,7 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                     response.status,
                     await response.text(),
                 )
-                raise PermissionError("Login failure")
+                raise HonAuthenticationError("Login failure")
             else:
                 try:
                     await response.json()
@@ -123,5 +124,5 @@ class HonAnonymousConnectionHandler(HonBaseConnectionHandler):
         kwargs["headers"] = kwargs.pop("headers", {}) | self._HEADERS
         async with method(*args, **kwargs) as response:
             if response.status == 403:
-                print("Can't authorize")
+                _LOGGER.error("Can't authenticate anymore")
             yield response

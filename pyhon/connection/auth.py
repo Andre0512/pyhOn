@@ -2,7 +2,6 @@ import json
 import logging
 import re
 import secrets
-import sys
 import urllib
 from pprint import pformat
 from urllib import parse
@@ -10,6 +9,7 @@ from urllib import parse
 from yarl import URL
 
 from pyhon import const
+from pyhon.exceptions import HonAuthenticationError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ class HonAuth:
         self._cognito_token = ""
         self._id_token = ""
         self._device = device
+        self._called_urls = []
 
     @property
     def cognito_token(self):
@@ -40,6 +41,16 @@ class HonAuth:
     @property
     def refresh_token(self):
         return self._refresh_token
+
+    async def _error_logger(self, response, fail=True):
+        result = "hOn Authentication Error\n"
+        for i, (status, url) in enumerate(self._called_urls):
+            result += f" {i + 1: 2d}     {status} - {url}\n"
+        result += f"ERROR - {response.status} - {response.request_info.url}\n"
+        result += f"{15 * '='} Response {15 * '='}\n{await response.text()}\n{40 * '='}"
+        _LOGGER.error(result)
+        if fail:
+            raise HonAuthenticationError("Can't login")
 
     async def _load_login(self):
         nonce = secrets.token_hex(16)
@@ -58,22 +69,27 @@ class HonAuth:
         async with self._session.get(
             f"{const.AUTH_API}/services/oauth2/authorize/expid_Login?{params}"
         ) as response:
-            _LOGGER.debug("%s - %s", response.status, response.request_info.url)
+            self._called_urls.append((response.status, response.request_info.url))
             if not (login_url := re.findall("url = '(.+?)'", await response.text())):
+                await self._error_logger(response)
                 return False
         async with self._session.get(login_url[0], allow_redirects=False) as redirect1:
-            _LOGGER.debug("%s - %s", redirect1.status, redirect1.request_info.url)
+            self._called_urls.append((redirect1.status, redirect1.request_info.url))
             if not (url := redirect1.headers.get("Location")):
+                await self._error_logger(redirect1)
                 return False
         async with self._session.get(url, allow_redirects=False) as redirect2:
-            _LOGGER.debug("%s - %s", redirect2.status, redirect2.request_info.url)
+            self._called_urls.append((redirect2.status, redirect2.request_info.url))
             if not (
                 url := redirect2.headers.get("Location")
                 + "&System=IoT_Mobile_App&RegistrationSubChannel=hOn"
             ):
+                await self._error_logger(redirect2)
                 return False
         async with self._session.get(URL(url, encoded=True)) as login_screen:
-            _LOGGER.debug("%s - %s", login_screen.status, login_screen.request_info.url)
+            self._called_urls.append(
+                (login_screen.status, login_screen.request_info.url)
+            )
             if context := re.findall(
                 '"fwuid":"(.*?)","loaded":(\\{.*?})', await login_screen.text()
             ):
@@ -83,6 +99,7 @@ class HonAuth:
                     "/".join(const.AUTH_API.split("/")[:-1]), ""
                 )
                 return fw_uid, loaded, login_url
+            await self._error_logger(login_screen)
         return False
 
     async def _login(self, fw_uid, loaded, login_url):
@@ -122,7 +139,7 @@ class HonAuth:
             data="&".join(f"{k}={json.dumps(v)}" for k, v in data.items()),
             params=params,
         ) as response:
-            _LOGGER.debug("%s - %s", response.status, response.request_info.url)
+            self._called_urls.append((response.status, response.request_info.url))
             if response.status == 200:
                 try:
                     data = await response.json()
@@ -133,35 +150,31 @@ class HonAuth:
                     _LOGGER.error(
                         "Can't get login url - %s", pformat(await response.json())
                     )
-            _LOGGER.error(
-                "Unable to login: %s\n%s", response.status, await response.text()
-            )
+            await self._error_logger(response)
             return ""
 
     async def _get_token(self, url):
         async with self._session.get(url) as response:
-            _LOGGER.debug("%s - %s", response.status, response.request_info.url)
+            self._called_urls.append((response.status, response.request_info.url))
             if response.status != 200:
-                _LOGGER.error("Unable to get token: %s", response.status)
+                await self._error_logger(response)
                 return False
             url = re.findall("href\\s*=\\s*[\"'](.+?)[\"']", await response.text())
-        if not url:
-            _LOGGER.error("Can't get login url - \n%s", await response.text())
-            raise PermissionError
+            if not url:
+                await self._error_logger(response)
+                return False
         if "ProgressiveLogin" in url[0]:
             async with self._session.get(url[0]) as response:
-                _LOGGER.debug("%s - %s", response.status, response.request_info.url)
+                self._called_urls.append((response.status, response.request_info.url))
                 if response.status != 200:
-                    _LOGGER.error("Unable to get token: %s", response.status)
+                    await self._error_logger(response)
                     return False
                 url = re.findall("href\\s*=\\s*[\"'](.*?)[\"']", await response.text())
         url = "/".join(const.AUTH_API.split("/")[:-1]) + url[0]
         async with self._session.get(url) as response:
-            _LOGGER.debug("%s - %s", response.status, response.request_info.url)
+            self._called_urls.append((response.status, response.request_info.url))
             if response.status != 200:
-                _LOGGER.error(
-                    "Unable to connect to the login service: %s", response.status
-                )
+                await self._error_logger(response)
                 return False
             text = await response.text()
         if access_token := re.findall("access_token=(.*?)&", text):
@@ -187,11 +200,11 @@ class HonAuth:
         async with self._session.post(
             f"{const.API_URL}/auth/v1/login", headers=post_headers, json=data
         ) as response:
-            _LOGGER.debug("%s - %s", response.status, response.request_info.url)
+            self._called_urls.append((response.status, response.request_info.url))
             try:
                 json_data = await response.json()
             except json.JSONDecodeError:
-                _LOGGER.error("No JSON Data after POST: %s", await response.text())
+                await self._error_logger(response)
                 return False
             self._cognito_token = json_data["cognitoUser"]["Token"]
         return True
@@ -205,8 +218,9 @@ class HonAuth:
         async with self._session.post(
             f"{const.AUTH_API}/services/oauth2/token", params=params
         ) as response:
-            _LOGGER.debug("%s - %s", response.status, response.request_info.url)
+            self._called_urls.append((response.status, response.request_info.url))
             if response.status >= 400:
+                await self._error_logger(response, fail=False)
                 return False
             data = await response.json()
         self._id_token = data["id_token"]

@@ -1,0 +1,2 @@
+class HonAuthenticationError(Exception):
+    pass
