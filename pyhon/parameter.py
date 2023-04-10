@@ -1,6 +1,10 @@
 import re
 
 
+def str_to_float(string):
+    return float(string.replace(",", "."))
+
+
 class HonParameter:
     def __init__(self, key, attributes):
         self._key = key
@@ -51,10 +55,10 @@ class HonParameterFixed(HonParameter):
 class HonParameterRange(HonParameter):
     def __init__(self, key, attributes):
         super().__init__(key, attributes)
-        self._min = int(attributes["minimumValue"])
-        self._max = int(attributes["maximumValue"])
-        self._step = int(attributes["incrementValue"])
-        self._default = int(attributes.get("defaultValue", self._min))
+        self._min = str_to_float(attributes["minimumValue"])
+        self._max = str_to_float(attributes["maximumValue"])
+        self._step = str_to_float(attributes["incrementValue"])
+        self._default = str_to_float(attributes.get("defaultValue", self._min))
         self._value = self._default
 
     def __repr__(self):
@@ -78,7 +82,7 @@ class HonParameterRange(HonParameter):
 
     @value.setter
     def value(self, value):
-        value = int(value)
+        value = str_to_float(value)
         if self._min <= value <= self._max and not value % self._step:
             self._value = value
         else:
