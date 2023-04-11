@@ -75,17 +75,18 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                 self._request_headers["id-token"] = self._auth.id_token
             else:
                 raise HonAuthenticationError("Can't login")
-        return {h: v for h, v in self._request_headers.items() if h not in headers}
+        return headers | self._request_headers
 
     @asynccontextmanager
     async def _intercept(self, method, *args, loop=0, **kwargs):
         kwargs["headers"] = await self._check_headers(kwargs.get("headers", {}))
         async with method(*args, **kwargs) as response:
-            if response.status == 403 and not loop:
+            if response.status in [401, 403] and loop == 0:
                 _LOGGER.info("Try refreshing token...")
                 await self._auth.refresh()
-                yield await self._intercept(method, *args, loop=loop + 1, **kwargs)
-            elif response.status == 403 and loop < 2:
+                async with self._intercept(method, *args, loop=loop + 1, **kwargs) as result:
+                    yield result
+            elif response.status in [401, 403] and loop == 1:
                 _LOGGER.warning(
                     "%s - Error %s - %s",
                     response.request_info.url,
@@ -93,7 +94,8 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                     await response.text(),
                 )
                 await self.create()
-                yield await self._intercept(method, *args, loop=loop + 1, **kwargs)
+                async with self._intercept(method, *args, loop=loop + 1, **kwargs) as result:
+                    yield result
             elif loop >= 2:
                 _LOGGER.error(
                     "%s - Error %s - %s",

@@ -194,7 +194,9 @@ class HonAuth:
             return False
         if not await self._get_token(url):
             return False
+        return await self._api_auth()
 
+    async def _api_auth(self):
         post_headers = {"id-token": self._id_token}
         data = self._device.get()
         async with self._session.post(
@@ -225,4 +227,4 @@ class HonAuth:
             data = await response.json()
         self._id_token = data["id_token"]
         self._access_token = data["access_token"]
-        return True
+        return await self._api_auth()

@@ -5,7 +5,7 @@ def str_to_float(string):
     try:
         return int(string)
     except ValueError:
-        return float(str(string.replace(",", ".")))
+        return float(str(string).replace(",", "."))
 
 
 class HonParameter:
