@@ -17,13 +17,13 @@ class HonBaseConnectionHandler:
         self._auth = None
 
     async def __aenter__(self):
+        self._session = aiohttp.ClientSession()
         return await self.create()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
     async def create(self):
-        self._session = aiohttp.ClientSession(headers=self._HEADERS)
         return self
 
     @asynccontextmanager
@@ -75,7 +75,7 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                 self._request_headers["id-token"] = self._auth.id_token
             else:
                 raise HonAuthenticationError("Can't login")
-        return headers | self._request_headers
+        return self._HEADERS | headers | self._request_headers
 
     @asynccontextmanager
     async def _intercept(self, method, *args, loop=0, **kwargs):
@@ -95,6 +95,8 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                     response.status,
                     await response.text(),
                 )
+                self._request_headers = {}
+                self._session.cookie_jar.clear_domain(const.AUTH_API.split("/")[-2])
                 await self.create()
                 async with self._intercept(
                     method, *args, loop=loop + 1, **kwargs

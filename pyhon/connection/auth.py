@@ -86,7 +86,9 @@ class HonAuth:
             ):
                 await self._error_logger(redirect2)
                 return False
-        async with self._session.get(URL(url, encoded=True)) as login_screen:
+        async with self._session.get(
+            URL(url, encoded=True), headers={"user-agent": const.USER_AGENT}
+        ) as login_screen:
             self._called_urls.append(
                 (login_screen.status, login_screen.request_info.url)
             )
