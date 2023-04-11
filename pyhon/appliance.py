@@ -1,6 +1,7 @@
 import importlib
 from contextlib import suppress
 
+from pyhon import helper
 from pyhon.commands import HonCommand
 from pyhon.parameter import HonParameterFixed
 
@@ -172,3 +173,15 @@ class HonAppliance:
         if self._extra:
             return self._extra.data(result)
         return result
+
+    @property
+    def diagnose(self):
+        data = self.data.copy()
+        for sensible in ["PK", "SK", "serialNumber", "code"]:
+            data["appliance"].pop(sensible, None)
+        result = helper.pretty_print({"data": self.data}, whitespace="\u200B \u200B ")
+        result += helper.pretty_print(
+            {"commands": helper.create_command(self.commands)},
+            whitespace="\u200B \u200B ",
+        )
+        return result.replace(self.mac_address, "12-34-56-78-90-ab")

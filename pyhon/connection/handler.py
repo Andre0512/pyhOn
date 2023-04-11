@@ -84,7 +84,9 @@ class HonConnectionHandler(HonBaseConnectionHandler):
             if response.status in [401, 403] and loop == 0:
                 _LOGGER.info("Try refreshing token...")
                 await self._auth.refresh()
-                async with self._intercept(method, *args, loop=loop + 1, **kwargs) as result:
+                async with self._intercept(
+                    method, *args, loop=loop + 1, **kwargs
+                ) as result:
                     yield result
             elif response.status in [401, 403] and loop == 1:
                 _LOGGER.warning(
@@ -94,7 +96,9 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                     await response.text(),
                 )
                 await self.create()
-                async with self._intercept(method, *args, loop=loop + 1, **kwargs) as result:
+                async with self._intercept(
+                    method, *args, loop=loop + 1, **kwargs
+                ) as result:
                     yield result
             elif loop >= 2:
                 _LOGGER.error(

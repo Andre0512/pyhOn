@@ -10,7 +10,7 @@ from pathlib import Path
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pyhon import Hon, HonAPI
+from pyhon import Hon, HonAPI, helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,61 +34,6 @@ def get_arguments():
     return vars(parser.parse_args())
 
 
-# yaml.dump() would be done the same, but needs an additional dependency...
-def pretty_print(data, key="", intend=0, is_list=False):
-    if type(data) is list:
-        if key:
-            print(f"{'  ' * intend}{'- ' if is_list else ''}{key}:")
-            intend += 1
-        for i, value in enumerate(data):
-            pretty_print(value, intend=intend, is_list=True)
-    elif type(data) is dict:
-        if key:
-            print(f"{'  ' * intend}{'- ' if is_list else ''}{key}:")
-            intend += 1
-        for i, (key, value) in enumerate(sorted(data.items())):
-            if is_list and not i:
-                pretty_print(value, key=key, intend=intend, is_list=True)
-            elif is_list:
-                pretty_print(value, key=key, intend=intend + 1)
-            else:
-                pretty_print(value, key=key, intend=intend)
-    else:
-        print(
-            f"{'  ' * intend}{'- ' if is_list else ''}{key}{': ' if key else ''}{data}"
-        )
-
-
-def key_print(data, key="", start=True):
-    if type(data) is list:
-        for i, value in enumerate(data):
-            key_print(value, key=f"{key}.{i}", start=False)
-    elif type(data) is dict:
-        for k, value in sorted(data.items()):
-            key_print(value, key=k if start else f"{key}.{k}", start=False)
-    else:
-        print(f"{key}: {data}")
-
-
-def create_command(commands, concat=False):
-    result = {}
-    for name, command in commands.items():
-        if not concat:
-            result[name] = {}
-        for parameter, data in command.parameters.items():
-            if data.typology == "enum":
-                value = data.values
-            elif data.typology == "range":
-                value = {"min": data.min, "max": data.max, "step": data.step}
-            else:
-                continue
-            if not concat:
-                result[name][parameter] = value
-            else:
-                result[f"{name}.{parameter}"] = value
-    return result
-
-
 async def translate(language, json_output=False):
     async with HonAPI(anonymous=True) as hon:
         keys = await hon.translation_keys(language)
@@ -102,7 +47,7 @@ async def translate(language, json_output=False):
             .replace("\\r", "")
         )
         keys = json.loads(clean_keys)
-        pretty_print(keys)
+        print(helper.pretty_print(keys))
 
 
 async def main():
@@ -120,13 +65,25 @@ async def main():
             if args.get("keys"):
                 data = device.data.copy()
                 attr = "get" if args.get("all") else "pop"
-                key_print(data["attributes"].__getattribute__(attr)("parameters"))
-                key_print(data.__getattribute__(attr)("appliance"))
-                key_print(data)
-                pretty_print(create_command(device.commands, concat=True))
+                print(
+                    helper.key_print(
+                        data["attributes"].__getattribute__(attr)("parameters")
+                    )
+                )
+                print(helper.key_print(data.__getattribute__(attr)("appliance")))
+                print(helper.key_print(data))
+                print(
+                    helper.pretty_print(
+                        helper.create_command(device.commands, concat=True)
+                    )
+                )
             else:
-                pretty_print({"data": device.data})
-                pretty_print({"settings": create_command(device.commands)})
+                print(helper.pretty_print({"data": device.data}))
+                print(
+                    helper.pretty_print(
+                        {"settings": helper.create_command(device.commands)}
+                    )
+                )
 
 
 def start():
