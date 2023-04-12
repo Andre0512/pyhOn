@@ -57,7 +57,6 @@ class HonConnectionHandler(HonBaseConnectionHandler):
             raise HonAuthenticationError("An email address must be specified")
         if not self._password:
             raise HonAuthenticationError("A password address must be specified")
-        self._request_headers = {}
 
     @property
     def device(self):
@@ -69,16 +68,11 @@ class HonConnectionHandler(HonBaseConnectionHandler):
         return self
 
     async def _check_headers(self, headers):
-        if (
-            "cognito-token" not in self._request_headers
-            or "id-token" not in self._request_headers
-        ):
-            if await self._auth.authorize():
-                self._request_headers["cognito-token"] = self._auth.cognito_token
-                self._request_headers["id-token"] = self._auth.id_token
-            else:
-                raise HonAuthenticationError("Can't login")
-        return self._HEADERS | headers | self._request_headers
+        if not (self._auth.cognito_token and self._auth.id_token):
+            await self._auth.authenticate()
+        headers["cognito-token"] = self._auth.cognito_token
+        headers["id-token"] = self._auth.id_token
+        return self._HEADERS | headers
 
     @asynccontextmanager
     async def _intercept(self, method, *args, loop=0, **kwargs):
@@ -98,8 +92,6 @@ class HonConnectionHandler(HonBaseConnectionHandler):
                     response.status,
                     await response.text(),
                 )
-                self._request_headers = {}
-                self._session.cookie_jar.clear_domain(const.AUTH_API.split("/")[-2])
                 await self.create()
                 async with self._intercept(
                     method, *args, loop=loop + 1, **kwargs

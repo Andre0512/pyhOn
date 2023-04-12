@@ -9,8 +9,7 @@ from urllib.parse import quote
 
 from yarl import URL
 
-from pyhon import const
-from pyhon.exceptions import HonAuthenticationError
+from pyhon import const, exceptions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class HonAuth:
         result += f"{15 * '='} Response {15 * '='}\n{await response.text()}\n{40 * '='}"
         _LOGGER.error(result)
         if fail:
-            raise HonAuthenticationError("Can't login")
+            raise exceptions.HonAuthenticationError("Can't login")
 
     async def _load_login(self):
         nonce = secrets.token_hex(16)
@@ -71,7 +70,11 @@ class HonAuth:
             f"{const.AUTH_API}/services/oauth2/authorize/expid_Login?{params}"
         ) as response:
             self._called_urls.append((response.status, response.request_info.url))
-            if not (login_url := re.findall("url = '(.+?)'", await response.text())):
+            text = await response.text()
+            if not (login_url := re.findall("url = '(.+?)'", text)):
+                if "oauth/done#access_token=" in text:
+                    self._parse_token_data(text)
+                    raise exceptions.HonNoAuthenticationNeeded()
                 await self._error_logger(response)
                 return False
         async with self._session.get(login_url[0], allow_redirects=False) as redirect1:
@@ -156,6 +159,14 @@ class HonAuth:
             await self._error_logger(response)
             return ""
 
+    def _parse_token_data(self, text):
+        if access_token := re.findall("access_token=(.*?)&", text):
+            self._access_token = access_token[0]
+        if refresh_token := re.findall("refresh_token=(.*?)&", text):
+            self._refresh_token = refresh_token[0]
+        if id_token := re.findall("id_token=(.*?)&", text):
+            self._id_token = id_token[0]
+
     async def _get_token(self, url):
         async with self._session.get(url) as response:
             self._called_urls.append((response.status, response.request_info.url))
@@ -179,25 +190,8 @@ class HonAuth:
             if response.status != 200:
                 await self._error_logger(response)
                 return False
-            text = await response.text()
-        if access_token := re.findall("access_token=(.*?)&", text):
-            self._access_token = access_token[0]
-        if refresh_token := re.findall("refresh_token=(.*?)&", text):
-            self._refresh_token = refresh_token[0]
-        if id_token := re.findall("id_token=(.*?)&", text):
-            self._id_token = id_token[0]
+            self._parse_token_data(await response.text())
         return True
-
-    async def authorize(self):
-        if login_site := await self._load_login():
-            fw_uid, loaded, login_url = login_site
-        else:
-            return False
-        if not (url := await self._login(fw_uid, loaded, login_url)):
-            return False
-        if not await self._get_token(url):
-            return False
-        return await self._api_auth()
 
     async def _api_auth(self):
         post_headers = {"id-token": self._id_token}
@@ -213,6 +207,20 @@ class HonAuth:
                 return False
             self._cognito_token = json_data["cognitoUser"]["Token"]
         return True
+
+    async def authenticate(self):
+        self.clear()
+        try:
+            if not (login_site := await self._load_login()):
+                raise exceptions.HonAuthenticationError("Can't open login page")
+            if not (url := await self._login(*login_site)):
+                raise exceptions.HonAuthenticationError("Can't login")
+            if not await self._get_token(url):
+                raise exceptions.HonAuthenticationError("Can't get token")
+            if not await self._api_auth():
+                raise exceptions.HonAuthenticationError("Can't get api token")
+        except exceptions.HonNoAuthenticationNeeded:
+            return
 
     async def refresh(self):
         params = {
@@ -231,3 +239,10 @@ class HonAuth:
         self._id_token = data["id_token"]
         self._access_token = data["access_token"]
         return await self._api_auth()
+
+    def clear(self):
+        self._session.cookie_jar.clear_domain(const.AUTH_API.split("/")[-2])
+        self._cognito_token = ""
+        self._id_token = ""
+        self._access_token = ""
+        self._refresh_token = ""
