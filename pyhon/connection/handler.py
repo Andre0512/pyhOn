@@ -13,17 +13,19 @@ class HonBaseConnectionHandler:
     _HEADERS = {"user-agent": const.USER_AGENT, "Content-Type": "application/json"}
 
     def __init__(self, session=None):
+        self._create_session = session is None
         self._session = session
         self._auth = None
 
     async def __aenter__(self):
-        self._session = aiohttp.ClientSession()
         return await self.create()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
     async def create(self):
+        if self._create_session:
+            self._session = aiohttp.ClientSession()
         return self
 
     @asynccontextmanager
@@ -41,7 +43,8 @@ class HonBaseConnectionHandler:
             yield response
 
     async def close(self):
-        await self._session.close()
+        if self._create_session:
+            await self._session.close()
 
 
 class HonConnectionHandler(HonBaseConnectionHandler):

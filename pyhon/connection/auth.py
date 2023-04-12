@@ -5,6 +5,7 @@ import secrets
 import urllib
 from pprint import pformat
 from urllib import parse
+from urllib.parse import quote
 
 from yarl import URL
 
@@ -113,8 +114,8 @@ class HonAuth:
                         "descriptor": "apex://LightningLoginCustomController/ACTION$login",
                         "callingDescriptor": "markup://c:loginForm",
                         "params": {
-                            "username": self._email,
-                            "password": self._password,
+                            "username": quote(self._email),
+                            "password": quote(self._password),
                             "startUrl": parse.unquote(
                                 login_url.split("startURL=")[-1]
                             ).split("%3D")[0],
