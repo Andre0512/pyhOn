@@ -4,6 +4,7 @@ import re
 import secrets
 import urllib
 from pprint import pformat
+from typing import List, Tuple
 from urllib import parse
 from urllib.parse import quote
 
@@ -24,7 +25,7 @@ class HonAuth:
         self._cognito_token = ""
         self._id_token = ""
         self._device = device
-        self._called_urls = []
+        self._called_urls: List[Tuple[int, str]] = []
 
     @property
     def cognito_token(self):

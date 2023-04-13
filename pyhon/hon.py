@@ -1,17 +1,20 @@
 import asyncio
-from typing import List
+from typing import List, Optional
+from typing_extensions import Self
 
-from pyhon import HonAPI
+from aiohttp import ClientSession
+
+from pyhon import HonAPI, exceptions
 from pyhon.appliance import HonAppliance
 
 
 class Hon:
-    def __init__(self, email, password, session=None):
-        self._email = email
-        self._password = password
-        self._session = session
-        self._appliances = []
-        self._api = None
+    def __init__(self, email: str, password: str, session: ClientSession | None = None):
+        self._email: str = email
+        self._password: str = password
+        self._session: ClientSession | None = session
+        self._appliances: List[HonAppliance] = []
+        self._api: Optional[HonAPI] = None
 
     async def __aenter__(self):
         return await self.create()
@@ -19,7 +22,13 @@ class Hon:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
 
-    async def create(self):
+    @property
+    def api(self) -> HonAPI:
+        if self._api is None:
+            raise exceptions.NoAuthenticationException
+        return self._api
+
+    async def create(self) -> Self:
         self._api = await HonAPI(
             self._email, self._password, session=self._session
         ).create()
