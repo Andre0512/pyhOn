@@ -32,11 +32,12 @@ class HonDevice:
     def mobile_id(self) -> str:
         return self._mobile_id
 
-    def get(self) -> Dict:
-        return {
+    def get(self, mobile: bool = False) -> Dict:
+        result = {
             "appVersion": self.app_version,
             "mobileId": self.mobile_id,
-            "osVersion": self.os_version,
             "os": self.os,
+            "osVersion": self.os_version,
             "deviceModel": self.device_model,
         }
+        return (result | {"mobileOs": result.pop("os")}) if mobile else result

@@ -139,7 +139,7 @@ class HonAPI:
             "commandName": command,
             "transactionId": f"{appliance.mac_address}_{now[:-3]}Z",
             "applianceOptions": appliance.commands_options,
-            "appliance": self._hon.device.get(),
+            "device": self._hon.device.get(mobile=True),
             "attributes": {
                 "channel": "mobileApp",
                 "origin": "standardProgram",
@@ -150,10 +150,11 @@ class HonAPI:
             "applianceType": appliance.appliance_type,
         }
         url: str = f"{const.API_URL}/commands/v1/send"
-        async with self._hon.post(url, json=data) as resp:
-            json_data: Dict = await resp.json()
+        async with self._hon.post(url, json=data) as response:
+            json_data: Dict = await response.json()
             if json_data.get("payload", {}).get("resultCode") == "0":
                 return True
+            _LOGGER.error(await response.text())
         return False
 
     async def appliance_configuration(self) -> Dict:
