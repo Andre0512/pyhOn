@@ -177,7 +177,7 @@ class HonAppliance:
     @property
     def diagnose(self):
         data = self.data.copy()
-        for sensible in ["PK", "SK", "serialNumber", "code"]:
+        for sensible in ["PK", "SK", "serialNumber", "code", "coords"]:
             data["appliance"].pop(sensible, None)
         result = helper.pretty_print({"data": self.data}, whitespace="\u200B \u200B ")
         result += helper.pretty_print(
