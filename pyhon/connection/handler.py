@@ -100,14 +100,18 @@ class HonConnectionHandler(HonBaseConnectionHandler):
     ) -> AsyncIterator:
         kwargs["headers"] = await self._check_headers(kwargs.get("headers", {}))
         async with method(*args, **kwargs) as response:
-            if response.status in [401, 403] and loop == 0:
+            if (
+                self._auth.token_expires_soon or response.status in [401, 403]
+            ) and loop == 0:
                 _LOGGER.info("Try refreshing token...")
                 await self._auth.refresh()
                 async with self._intercept(
                     method, *args, loop=loop + 1, **kwargs
                 ) as result:
                     yield result
-            elif response.status in [401, 403] and loop == 1:
+            elif (
+                self._auth.token_is_expired or response.status in [401, 403]
+            ) and loop == 1:
                 _LOGGER.warning(
                     "%s - Error %s - %s",
                     response.request_info.url,

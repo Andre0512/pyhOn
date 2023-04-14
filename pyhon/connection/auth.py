@@ -3,6 +3,7 @@ import logging
 import re
 import secrets
 import urllib
+from datetime import datetime, timedelta
 from pprint import pformat
 from typing import List, Tuple
 from urllib import parse
@@ -16,6 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HonAuth:
+    _TOKEN_EXPIRES_AFTER_HOURS = 8
+    _TOKEN_EXPIRE_WARNING_HOURS = 7
+
     def __init__(self, session, email, password, device) -> None:
         self._session = session
         self._email = email
@@ -26,6 +30,7 @@ class HonAuth:
         self._id_token = ""
         self._device = device
         self._called_urls: List[Tuple[int, str]] = []
+        self._expires: datetime = datetime.utcnow()
 
     @property
     def cognito_token(self):
@@ -42,6 +47,17 @@ class HonAuth:
     @property
     def refresh_token(self):
         return self._refresh_token
+
+    def _check_token_expiration(self, hours):
+        return datetime.utcnow() >= self._expires + timedelta(hours=hours)
+
+    @property
+    def token_is_expired(self) -> bool:
+        return self._check_token_expiration(self._TOKEN_EXPIRES_AFTER_HOURS)
+
+    @property
+    def token_expires_soon(self) -> bool:
+        return self._check_token_expiration(self._TOKEN_EXPIRE_WARNING_HOURS)
 
     async def _error_logger(self, response, fail=True):
         result = "hOn Authentication Error\n"
@@ -72,6 +88,7 @@ class HonAuth:
         ) as response:
             self._called_urls.append((response.status, response.request_info.url))
             text = await response.text()
+            self._expires = datetime.utcnow()
             if not (login_url := re.findall("url = '(.+?)'", text)):
                 if "oauth/done#access_token=" in text:
                     self._parse_token_data(text)
@@ -237,12 +254,14 @@ class HonAuth:
                 await self._error_logger(response, fail=False)
                 return False
             data = await response.json()
+        self._expires = datetime.utcnow()
         self._id_token = data["id_token"]
         self._access_token = data["access_token"]
         return await self._api_auth()
 
     def clear(self):
         self._session.cookie_jar.clear_domain(const.AUTH_API.split("/")[-2])
+        self._called_urls = []
         self._cognito_token = ""
         self._id_token = ""
         self._access_token = ""
