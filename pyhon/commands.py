@@ -1,34 +1,49 @@
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
+
 from pyhon.parameter import (
     HonParameterFixed,
     HonParameterEnum,
     HonParameterRange,
     HonParameterProgram,
+    HonParameter,
 )
+
+if TYPE_CHECKING:
+    from pyhon import HonAPI
+    from pyhon.appliance import HonAppliance
 
 
 class HonCommand:
     def __init__(
-        self, name: str, attributes, connector, device, programs=None, program_name=""
+        self,
+        name: str,
+        attributes: Dict[str, Any],
+        api: "HonAPI",
+        appliance: "HonAppliance",
+        programs: Optional[Dict[str, "HonCommand"]] = None,
+        program_name: str = "",
     ):
-        self._connector = connector
-        self._device = device
-        self._name = name
-        self._programs = programs or {}
-        self._program_name = program_name
-        self._description = attributes.get("description", "")
-        self._parameters = self._create_parameters(attributes.get("parameters", {}))
-        self._ancillary_parameters = self._create_parameters(
+        self._api: HonAPI = api
+        self._appliance: "HonAppliance" = appliance
+        self._name: str = name
+        self._programs: Optional[Dict[str, "HonCommand"]] = programs or {}
+        self._program_name: str = program_name
+        self._description: str = attributes.get("description", "")
+        self._parameters: Dict[str, HonParameter] = self._create_parameters(
+            attributes.get("parameters", {})
+        )
+        self._ancillary_parameters: Dict[str, HonParameter] = self._create_parameters(
             attributes.get("ancillaryParameters", {})
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self._name} command"
 
-    def _create_parameters(self, parameters):
-        result = {}
+    def _create_parameters(self, parameters: Dict) -> Dict[str, HonParameter]:
+        result: Dict[str, HonParameter] = {}
         for parameter, attributes in parameters.items():
-            if parameter == "zoneMap" and self._device.zone:
-                attributes["default"] = self._device.zone
+            if parameter == "zoneMap" and self._appliance.zone:
+                attributes["default"] = self._appliance.zone
             match attributes.get("typology"):
                 case "range":
                     result[parameter] = HonParameterRange(parameter, attributes)
@@ -41,38 +56,41 @@ class HonCommand:
         return result
 
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, HonParameter]:
         return self._parameters
 
     @property
-    def ancillary_parameters(self):
+    def ancillary_parameters(self) -> Dict[str, str | float]:
         return {
             key: parameter.value
             for key, parameter in self._ancillary_parameters.items()
         }
 
-    async def send(self):
+    async def send(self) -> bool:
         parameters = {
             name: parameter.value for name, parameter in self._parameters.items()
         }
-        return await self._connector.send_command(
-            self._device, self._name, parameters, self.ancillary_parameters
+        return await self._api.send_command(
+            self._appliance, self._name, parameters, self.ancillary_parameters
         )
 
     @property
-    def programs(self):
+    def programs(self) -> Dict[str, "HonCommand"]:
+        if self._programs is None:
+            return {}
         return self._programs
 
     @property
-    def program(self):
+    def program(self) -> str:
         return self._program_name
 
     @program.setter
-    def program(self, program):
-        self._device.commands[self._name] = self._programs[program]
+    def program(self, program: str) -> None:
+        self._appliance.commands[self._name] = self.programs[program]
 
-    def _get_settings_keys(self, command=None):
-        command = command or self
+    def _get_settings_keys(self, command: Optional["HonCommand"] = None) -> List[str]:
+        if command is None:
+            command = self
         keys = []
         for key, parameter in command._parameters.items():
             if isinstance(parameter, HonParameterFixed):
@@ -82,7 +100,7 @@ class HonCommand:
         return keys
 
     @property
-    def setting_keys(self):
+    def setting_keys(self) -> List[str]:
         if not self._programs:
             return self._get_settings_keys()
         result = [
@@ -93,10 +111,10 @@ class HonCommand:
         return list(set(result + ["program"]))
 
     @property
-    def settings(self):
+    def settings(self) -> Dict[str, HonParameter]:
         """Parameters with typology enum and range"""
         return {
-            s: self._parameters.get(s)
+            s: param
             for s in self.setting_keys
-            if self._parameters.get(s) is not None
+            if (param := self._parameters.get(s)) is not None
         }

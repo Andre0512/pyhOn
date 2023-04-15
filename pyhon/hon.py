@@ -1,5 +1,6 @@
 import asyncio
-from typing import List, Optional, Dict, Any
+from types import TracebackType
+from typing import List, Optional, Dict, Any, Type
 
 from aiohttp import ClientSession
 from typing_extensions import Self
@@ -16,10 +17,15 @@ class Hon:
         self._appliances: List[HonAppliance] = []
         self._api: Optional[HonAPI] = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         return await self.create()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         await self.close()
 
     @property
@@ -52,12 +58,12 @@ class Hon:
         )
         self._appliances.append(appliance)
 
-    async def setup(self):
+    async def setup(self) -> None:
         appliance: Dict
-        for appliance in (await self._api.load_appliances())["payload"]["appliances"]:
+        for appliance in (await self.api.load_appliances())["payload"]["appliances"]:
             for zone in range(int(appliance.get("zone", "0"))):
                 await self._create_appliance(appliance.copy(), zone=zone + 1)
             await self._create_appliance(appliance)
 
-    async def close(self):
-        await self._api.close()
+    async def close(self) -> None:
+        await self.api.close()
