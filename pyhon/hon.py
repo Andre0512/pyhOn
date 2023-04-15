@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Optional
+from typing import List, Optional, Dict
 from typing_extensions import Self
 
 from aiohttp import ClientSession
@@ -39,19 +39,24 @@ class Hon:
     def appliances(self) -> List[HonAppliance]:
         return self._appliances
 
+    async def _create_appliance(self, appliance: Dict, zone=0) -> None:
+        appliance = HonAppliance(self._api, appliance, zone=zone)
+        if appliance.mac_address is None:
+            return
+        await asyncio.gather(
+            *[
+                appliance.load_attributes(),
+                appliance.load_commands(),
+                appliance.load_statistics(),
+            ]
+        )
+        self._appliances.append(appliance)
+
     async def setup(self):
         for appliance in (await self._api.load_appliances())["payload"]["appliances"]:
-            appliance = HonAppliance(self._api, appliance)
-            if appliance.mac_address is None:
-                continue
-            await asyncio.gather(
-                *[
-                    appliance.load_attributes(),
-                    appliance.load_commands(),
-                    appliance.load_statistics(),
-                ]
-            )
-            self._appliances.append(appliance)
+            for zone in range(int(appliance.get("zone", "0"))):
+                await self._create_appliance(appliance, zone=zone + 1)
+            await self._create_appliance(appliance)
 
     async def close(self):
         await self._api.close()

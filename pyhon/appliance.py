@@ -1,5 +1,6 @@
 import importlib
 from contextlib import suppress
+from typing import Optional, Dict
 
 from pyhon import helper
 from pyhon.commands import HonCommand
@@ -7,7 +8,7 @@ from pyhon.parameter import HonParameterFixed
 
 
 class HonAppliance:
-    def __init__(self, api, info):
+    def __init__(self, api, info: Dict, zone: int = 0) -> None:
         if attributes := info.get("attributes"):
             info["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
         self._info = info
@@ -17,6 +18,7 @@ class HonAppliance:
         self._commands = {}
         self._statistics = {}
         self._attributes = {}
+        self._zone = zone
 
         try:
             self._extra = importlib.import_module(
@@ -26,20 +28,21 @@ class HonAppliance:
             self._extra = None
 
     def __getitem__(self, item):
+        if self._zone:
+            item += f"Z{self._zone}"
         if "." in item:
             result = self.data
             for key in item.split("."):
-                if all([k in "0123456789" for k in key]) and type(result) is list:
+                if all(k in "0123456789" for k in key) and isinstance(result, list):
                     result = result[int(key)]
                 else:
                     result = result[key]
             return result
-        else:
-            if item in self.data:
-                return self.data[item]
-            if item in self.attributes["parameters"]:
-                return self.attributes["parameters"].get(item)
-            return self.info[item]
+        if item in self.data:
+            return self.data[item]
+        if item in self.attributes["parameters"]:
+            return self.attributes["parameters"].get(item)
+        return self.info[item]
 
     def get(self, item, default=None):
         try:
@@ -47,25 +50,31 @@ class HonAppliance:
         except (KeyError, IndexError):
             return default
 
+    def _check_name_zone(self, name: str, frontend: bool = True) -> str:
+        middle = " Z" if frontend else "_z"
+        if (attribute := self._info.get(name, "")) and self._zone:
+            return f"{attribute}{middle}{self._zone}"
+        return attribute
+
     @property
-    def appliance_model_id(self):
+    def appliance_model_id(self) -> str:
         return self._info.get("applianceModelId")
 
     @property
-    def appliance_type(self):
+    def appliance_type(self) -> str:
         return self._info.get("applianceTypeName")
 
     @property
-    def mac_address(self):
-        return self._info.get("macAddress")
+    def mac_address(self) -> str:
+        return self._check_name_zone("macAddress", frontend=False)
 
     @property
-    def model_name(self):
-        return self._info.get("modelName")
+    def model_name(self) -> str:
+        return self._check_name_zone("modelName")
 
     @property
-    def nick_name(self):
-        return self._info.get("nickName")
+    def nick_name(self) -> str:
+        return self._check_name_zone("nickName")
 
     @property
     def commands_options(self):

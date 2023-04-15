@@ -100,8 +100,6 @@ This generates a huge output. It is recommended to pipe this into a file
 $ pyhOn translate fr > hon_fr.yaml
 $ pyhOn translate en --json > hon_en.json
 ```
-## Tested devices
-- Haier Washing Machine HW90
 
 ## Usage example
 This library is used for the custom [HomeAssistant Integration "Haier hOn"](https://github.com/Andre0512/hOn).

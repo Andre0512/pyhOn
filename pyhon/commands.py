@@ -25,6 +25,8 @@ class HonCommand:
     def _create_parameters(self, parameters):
         result = {}
         for parameter, attributes in parameters.items():
+            if parameter == "zoneMap" and self._device.zone:
+                attributes["default"] = self._device.zone
             match attributes.get("typology"):
                 case "range":
                     result[parameter] = HonParameterRange(parameter, attributes)
