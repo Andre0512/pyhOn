@@ -1,23 +1,29 @@
 import importlib
 from contextlib import suppress
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
+from typing import TYPE_CHECKING
 
 from pyhon import helper
 from pyhon.commands import HonCommand
 from pyhon.parameter import HonParameterFixed
 
+if TYPE_CHECKING:
+    from pyhon import HonAPI
+
 
 class HonAppliance:
-    def __init__(self, api, info: Dict, zone: int = 0) -> None:
+    def __init__(
+        self, api: Optional["HonAPI"], info: Dict[str, Any], zone: int = 0
+    ) -> None:
         if attributes := info.get("attributes"):
             info["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
-        self._info = info
-        self._api = api
-        self._appliance_model = {}
+        self._info: Dict = info
+        self._api: Optional[HonAPI] = api
+        self._appliance_model: Dict = {}
 
-        self._commands = {}
-        self._statistics = {}
-        self._attributes = {}
+        self._commands: Dict = {}
+        self._statistics: Dict = {}
+        self._attributes: Dict = {}
         self._zone = zone
 
         try:
@@ -58,11 +64,11 @@ class HonAppliance:
 
     @property
     def appliance_model_id(self) -> str:
-        return self._info.get("applianceModelId")
+        return self._info.get("applianceModelId", "")
 
     @property
     def appliance_type(self) -> str:
-        return self._info.get("applianceTypeName")
+        return self._info.get("applianceTypeName", "")
 
     @property
     def mac_address(self) -> str:

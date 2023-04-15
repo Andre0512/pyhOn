@@ -1,7 +1,7 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable, Dict, Any
 
 import aiohttp
 from typing_extensions import Self
@@ -37,18 +37,18 @@ class ConnectionHandler:
         raise NotImplementedError
 
     @asynccontextmanager
-    async def get(self, *args, **kwargs) -> AsyncIterator[Callable]:
+    async def get(self, *args, **kwargs) -> AsyncIterator[aiohttp.ClientResponse]:
         if self._session is None:
             raise exceptions.NoSessionException()
-        response: Callable
+        response: aiohttp.ClientResponse
         async with self._intercept(self._session.get, *args, **kwargs) as response:
             yield response
 
     @asynccontextmanager
-    async def post(self, *args, **kwargs) -> AsyncIterator[Callable]:
+    async def post(self, *args, **kwargs) -> AsyncIterator[aiohttp.ClientResponse]:
         if self._session is None:
             raise exceptions.NoSessionException()
-        response: Callable
+        response: aiohttp.ClientResponse
         async with self._intercept(self._session.post, *args, **kwargs) as response:
             yield response
 

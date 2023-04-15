@@ -10,7 +10,7 @@ from typing_extensions import Self
 from pyhon.connection.auth import HonAuth
 from pyhon.connection.device import HonDevice
 from pyhon.connection.handler.base import ConnectionHandler
-from pyhon.exceptions import HonAuthenticationError
+from pyhon.exceptions import HonAuthenticationError, NoAuthenticationException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,9 @@ class HonConnectionHandler(ConnectionHandler):
         self._auth: Optional[HonAuth] = None
 
     @property
-    def auth(self) -> Optional[HonAuth]:
+    def auth(self) -> HonAuth:
+        if self._auth is None:
+            raise NoAuthenticationException()
         return self._auth
 
     @property
@@ -39,16 +41,14 @@ class HonConnectionHandler(ConnectionHandler):
 
     async def create(self) -> Self:
         await super().create()
-        self._auth: HonAuth = HonAuth(
-            self._session, self._email, self._password, self._device
-        )
+        self._auth = HonAuth(self._session, self._email, self._password, self._device)
         return self
 
     async def _check_headers(self, headers: Dict) -> Dict:
-        if not (self._auth.cognito_token and self._auth.id_token):
-            await self._auth.authenticate()
-        headers["cognito-token"] = self._auth.cognito_token
-        headers["id-token"] = self._auth.id_token
+        if not (self.auth.cognito_token and self.auth.id_token):
+            await self.auth.authenticate()
+        headers["cognito-token"] = self.auth.cognito_token
+        headers["id-token"] = self.auth.id_token
         return self._HEADERS | headers
 
     @asynccontextmanager
@@ -58,16 +58,16 @@ class HonConnectionHandler(ConnectionHandler):
         kwargs["headers"] = await self._check_headers(kwargs.get("headers", {}))
         async with method(*args, **kwargs) as response:
             if (
-                self._auth.token_expires_soon or response.status in [401, 403]
+                self.auth.token_expires_soon or response.status in [401, 403]
             ) and loop == 0:
                 _LOGGER.info("Try refreshing token...")
-                await self._auth.refresh()
+                await self.auth.refresh()
                 async with self._intercept(
                     method, *args, loop=loop + 1, **kwargs
                 ) as result:
                     yield result
             elif (
-                self._auth.token_is_expired or response.status in [401, 403]
+                self.auth.token_is_expired or response.status in [401, 403]
             ) and loop == 1:
                 _LOGGER.warning(
                     "%s - Error %s - %s",
