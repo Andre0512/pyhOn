@@ -9,7 +9,8 @@ from aiohttp import ClientSession
 from pyhon import const, exceptions
 from pyhon.appliance import HonAppliance
 from pyhon.connection.auth import HonAuth
-from pyhon.connection.handler import HonConnectionHandler, HonAnonymousConnectionHandler
+from pyhon.connection.handler.hon import HonConnectionHandler
+from pyhon.connection.handler.anonym import HonAnonymousConnectionHandler
 
 _LOGGER = logging.getLogger()
 
