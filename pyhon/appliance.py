@@ -148,7 +148,14 @@ class HonAppliance:
                 multi = {}
                 for program, attr2 in attr.items():
                     program = program.split(".")[-1].lower()
-                    cmd = HonCommand(command, attr2, self._api, self, programs=multi, program_name=program)
+                    cmd = HonCommand(
+                        command,
+                        attr2,
+                        self._api,
+                        self,
+                        programs=multi,
+                        program_name=program,
+                    )
                     multi[program] = cmd
                     commands[command] = cmd
         self._commands = commands

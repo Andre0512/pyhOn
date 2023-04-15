@@ -7,7 +7,9 @@ from pyhon.parameter import (
 
 
 class HonCommand:
-    def __init__(self, name:str, attributes, connector, device, programs=None, program_name=""):
+    def __init__(
+        self, name: str, attributes, connector, device, programs=None, program_name=""
+    ):
         self._connector = connector
         self._device = device
         self._name = name
@@ -84,7 +86,9 @@ class HonCommand:
         if not self._programs:
             return self._get_settings_keys()
         result = [
-            key for cmd in self._programs.values() for key in self._get_settings_keys(cmd)
+            key
+            for cmd in self._programs.values()
+            for key in self._get_settings_keys(cmd)
         ]
         return list(set(result + ["program"]))
 

@@ -1,6 +1,3 @@
-import re
-
-
 def str_to_float(string):
     try:
         return int(string)
@@ -14,7 +11,6 @@ class HonParameter:
         self._category = attributes.get("category")
         self._typology = attributes.get("typology")
         self._mandatory = attributes.get("mandatory")
-        self._value = ""
 
     @property
     def key(self):
@@ -121,6 +117,8 @@ class HonParameterEnum(HonParameter):
 
 
 class HonParameterProgram(HonParameterEnum):
+    _FILTER = ["iot_recipe", "iot_guided"]
+
     def __init__(self, key, command):
         super().__init__(key, {})
         self._command = command
@@ -141,17 +139,6 @@ class HonParameterProgram(HonParameterEnum):
             raise ValueError(f"Allowed values {self._values}")
 
     @property
-    def filter(self):
-        return self._filter
-
-    @filter.setter
-    def filter(self, filter):
-        self._filter = filter
-
-    @property
     def values(self):
-        values = []
-        for value in self._values:
-            if not self._filter or re.findall(self._filter, str(value)):
-                values.append(str(value))
+        values = [v for v in self._values if all(f not in v for f in self._FILTER)]
         return sorted(values)
