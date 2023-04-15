@@ -1,0 +1,21 @@
+from typing import Dict, Any
+
+from pyhon.parameter.base import HonParameter
+
+
+class HonParameterFixed(HonParameter):
+    def __init__(self, key: str, attributes: Dict[str, Any]) -> None:
+        super().__init__(key, attributes)
+        self._value = attributes.get("fixedValue", None)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__} (<{self.key}> fixed)"
+
+    @property
+    def value(self) -> str | float:
+        return self._value if self._value is not None else "0"
+
+    @value.setter
+    def value(self, value):
+        if not value == self._value:
+            raise ValueError("Can't change fixed value")

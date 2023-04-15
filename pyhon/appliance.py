@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pyhon import helper
 from pyhon.commands import HonCommand
-from pyhon.parameter import HonParameterFixed
+from pyhon.parameter.fixed import HonParameterFixed
 
 if TYPE_CHECKING:
     from pyhon import HonAPI
