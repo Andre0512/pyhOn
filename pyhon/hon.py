@@ -1,4 +1,5 @@
 import asyncio
+import copy
 from typing import List, Optional, Dict, Any
 from typing_extensions import Self
 
@@ -53,9 +54,10 @@ class Hon:
         self._appliances.append(appliance)
 
     async def setup(self):
+        appliance: Dict
         for appliance in (await self._api.load_appliances())["payload"]["appliances"]:
             for zone in range(int(appliance.get("zone", "0"))):
-                await self._create_appliance(appliance, zone=zone + 1)
+                await self._create_appliance(appliance.copy(), zone=zone + 1)
             await self._create_appliance(appliance)
 
     async def close(self):

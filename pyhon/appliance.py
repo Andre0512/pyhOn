@@ -72,6 +72,10 @@ class HonAppliance:
 
     @property
     def mac_address(self) -> str:
+        return self.info.get("macAddress", "")
+
+    @property
+    def unique_id(self) -> str:
         return self._check_name_zone("macAddress", frontend=False)
 
     @property

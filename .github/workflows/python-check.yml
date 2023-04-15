@@ -33,7 +33,6 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
     - name: Type check with mypy
       run: |
-        # stop the build if there are Python syntax errors or undefined names
         mypy pyhon/
     # - name: Analysing the code with pylint
     #   run: |
