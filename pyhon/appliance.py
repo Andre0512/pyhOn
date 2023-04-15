@@ -124,8 +124,8 @@ class HonAppliance:
             if last is None:
                 continue
             parameters = command_history[last].get("command", {}).get("parameters", {})
-            if command._multi and parameters.get("program"):
-                command.set_program(parameters.pop("program").split(".")[-1].lower())
+            if command.programs and parameters.get("program"):
+                command.program = parameters.pop("program").split(".")[-1].lower()
                 command = self.commands[name]
             for key, data in command.settings.items():
                 if (
@@ -148,9 +148,7 @@ class HonAppliance:
                 multi = {}
                 for program, attr2 in attr.items():
                     program = program.split(".")[-1].lower()
-                    cmd = HonCommand(
-                        command, attr2, self._api, self, multi=multi, program=program
-                    )
+                    cmd = HonCommand(command, attr2, self._api, self, programs=multi, program_name=program)
                     multi[program] = cmd
                     commands[command] = cmd
         self._commands = commands

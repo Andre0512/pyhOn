@@ -6,8 +6,7 @@ import urllib
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from pprint import pformat
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from urllib import parse
 from urllib.parse import quote
 

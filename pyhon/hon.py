@@ -1,9 +1,8 @@
 import asyncio
-import copy
 from typing import List, Optional, Dict, Any
-from typing_extensions import Self
 
 from aiohttp import ClientSession
+from typing_extensions import Self
 
 from pyhon import HonAPI, exceptions
 from pyhon.appliance import HonAppliance

@@ -1,7 +1,7 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Optional, Callable, Dict, Any
+from typing import Optional, Callable, Dict
 
 import aiohttp
 from typing_extensions import Self

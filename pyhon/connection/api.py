@@ -2,15 +2,15 @@ import json
 import logging
 from datetime import datetime
 from typing import Dict, Optional
-from typing_extensions import Self
 
 from aiohttp import ClientSession
+from typing_extensions import Self
 
 from pyhon import const, exceptions
 from pyhon.appliance import HonAppliance
 from pyhon.connection.auth import HonAuth
-from pyhon.connection.handler.hon import HonConnectionHandler
 from pyhon.connection.handler.anonym import HonAnonymousConnectionHandler
+from pyhon.connection.handler.hon import HonConnectionHandler
 
 _LOGGER = logging.getLogger()
 

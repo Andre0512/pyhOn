@@ -7,12 +7,12 @@ from pyhon.parameter import (
 
 
 class HonCommand:
-    def __init__(self, name, attributes, connector, device, multi=None, program=""):
+    def __init__(self, name:str, attributes, connector, device, programs=None, program_name=""):
         self._connector = connector
         self._device = device
         self._name = name
-        self._multi = multi or {}
-        self._program = program
+        self._programs = programs or {}
+        self._program_name = program_name
         self._description = attributes.get("description", "")
         self._parameters = self._create_parameters(attributes.get("parameters", {}))
         self._ancillary_parameters = self._create_parameters(
@@ -34,7 +34,7 @@ class HonCommand:
                     result[parameter] = HonParameterEnum(parameter, attributes)
                 case "fixed":
                     result[parameter] = HonParameterFixed(parameter, attributes)
-        if self._multi:
+        if self._programs:
             result["program"] = HonParameterProgram("program", self)
         return result
 
@@ -57,11 +57,17 @@ class HonCommand:
             self._device, self._name, parameters, self.ancillary_parameters
         )
 
-    def get_programs(self):
-        return self._multi
+    @property
+    def programs(self):
+        return self._programs
 
-    def set_program(self, program):
-        self._device.commands[self._name] = self._multi[program]
+    @property
+    def program(self):
+        return self._program_name
+
+    @program.setter
+    def program(self, program):
+        self._device.commands[self._name] = self._programs[program]
 
     def _get_settings_keys(self, command=None):
         command = command or self
@@ -75,10 +81,10 @@ class HonCommand:
 
     @property
     def setting_keys(self):
-        if not self._multi:
+        if not self._programs:
             return self._get_settings_keys()
         result = [
-            key for cmd in self._multi.values() for key in self._get_settings_keys(cmd)
+            key for cmd in self._programs.values() for key in self._get_settings_keys(cmd)
         ]
         return list(set(result + ["program"]))
 

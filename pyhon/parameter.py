@@ -124,8 +124,8 @@ class HonParameterProgram(HonParameterEnum):
     def __init__(self, key, command):
         super().__init__(key, {})
         self._command = command
-        self._value = command._program
-        self._values = command._multi
+        self._value = command.program
+        self._values = command.programs
         self._typology = "enum"
         self._filter = ""
 
@@ -136,7 +136,7 @@ class HonParameterProgram(HonParameterEnum):
     @value.setter
     def value(self, value):
         if value in self.values:
-            self._command.set_program(value)
+            self._command.program = value
         else:
             raise ValueError(f"Allowed values {self._values}")
 
