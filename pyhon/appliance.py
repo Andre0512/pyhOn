@@ -24,7 +24,7 @@ class HonAppliance:
         self._commands: Dict = {}
         self._statistics: Dict = {}
         self._attributes: Dict = {}
-        self._zone = zone
+        self._zone: int = zone
 
         try:
             self._extra = importlib.import_module(
@@ -105,6 +105,10 @@ class HonAppliance:
     @property
     def info(self):
         return self._info
+
+    @property
+    def zone(self) -> int:
+        return self._zone
 
     async def _recover_last_command_states(self, commands):
         command_history = await self._api.command_history(self)
