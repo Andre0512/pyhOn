@@ -49,7 +49,7 @@ def create_command(commands, concat=False):
     for name, command in commands.items():
         if not concat:
             result[name] = {}
-        for parameter, data in command.parameters.items():
+        for parameter, data in command.settings.items():
             if data.typology == "enum":
                 value = data.values
             elif data.typology == "range":

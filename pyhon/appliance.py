@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class HonAppliance:
     def __init__(
-        self, api: Optional["HonAPI"], info: Dict[str, Any], zone: int = 0
+            self, api: Optional["HonAPI"], info: Dict[str, Any], zone: int = 0
     ) -> None:
         if attributes := info.get("attributes"):
             info["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
@@ -129,8 +129,8 @@ class HonAppliance:
                 command = self.commands[name]
             for key, data in command.settings.items():
                 if (
-                    not isinstance(data, HonParameterFixed)
-                    and parameters.get(key) is not None
+                        not isinstance(data, HonParameterFixed)
+                        and parameters.get(key) is not None
                 ):
                     with suppress(ValueError):
                         data.value = parameters.get(key)
@@ -175,7 +175,7 @@ class HonAppliance:
     def parameters(self):
         result = {}
         for name, command in self._commands.items():
-            for key, parameter in command.parameters.items():
+            for key, parameter in (command.parameters | command.ancillary_parameters).items():
                 result.setdefault(name, {})[key] = parameter.value
         return result
 
