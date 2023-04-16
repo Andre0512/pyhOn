@@ -58,11 +58,8 @@ class HonCommand:
         return self._parameters
 
     @property
-    def ancillary_parameters(self) -> Dict[str, str | float]:
-        return {
-            key: parameter.value
-            for key, parameter in self._ancillary_parameters.items()
-        }
+    def ancillary_parameters(self) -> Dict[str, HonParameter]:
+        return self._ancillary_parameters
 
     async def send(self) -> bool:
         parameters = {
@@ -90,7 +87,9 @@ class HonCommand:
         if command is None:
             command = self
         keys = []
-        for key, parameter in command._parameters.items():
+        for key, parameter in (
+            command._parameters | command._ancillary_parameters
+        ).items():
             if isinstance(parameter, HonParameterFixed):
                 continue
             if key not in keys:
@@ -115,4 +114,5 @@ class HonCommand:
             s: param
             for s in self.setting_keys
             if (param := self._parameters.get(s)) is not None
+            or (param := self._ancillary_parameters.get(s)) is not None
         }

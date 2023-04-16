@@ -175,7 +175,9 @@ class HonAppliance:
     def parameters(self):
         result = {}
         for name, command in self._commands.items():
-            for key, parameter in command.parameters.items():
+            for key, parameter in (
+                command.parameters | command.ancillary_parameters
+            ).items():
                 result.setdefault(name, {})[key] = parameter.value
         return result
 
