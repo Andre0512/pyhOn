@@ -16,6 +16,6 @@ class HonParameterFixed(HonParameter):
         return self._value if self._value is not None else "0"
 
     @value.setter
-    def value(self, value):
-        if not value == self._value:
-            raise ValueError("Can't change fixed value")
+    def value(self, value: str | float) -> None:
+        # Fixed values seems being not so fixed as thought
+        self._value = value
