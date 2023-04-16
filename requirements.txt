@@ -1,1 +1,2 @@
-aiohttp
+aiohttp==3.8.4
+yarl==1.8.2

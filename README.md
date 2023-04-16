@@ -6,7 +6,7 @@
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyhOn)](https://www.python.org/)
 [![PyPI - License](https://img.shields.io/pypi/l/pyhOn)](https://github.com/Andre0512/pyhOn/blob/main/LICENSE)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/pyhOn)](https://pypistats.org/packages/pyhon)  
-Control your Haier appliances with python!
+Control your Haier, Candy and Hoover appliances with python!
 The idea behind this library is, to make the use of all available commands as simple as possible.
 
 ## Installation
@@ -47,28 +47,28 @@ settings:
 ### List devices
 ```python
 import asyncio
-from pyhon import HonConnection
+from pyhon import Hon
 
 async def devices_example():
-    async with HonConnection(USER, PASSWORD) as hon:
-        for device in hon.devices:
-            print(device.nick_name)
+    async with Hon(USER, PASSWORD) as hon:
+        for appliance in hon.appliances:
+            print(appliance.nick_name)
 
 asyncio.run(devices_example())
 ```
 
 ### Execute a command
 ```python
-async with HonConnection(USER, PASSWORD) as hon:
-    washing_machine = hon.devices[0]
+async with Hon(USER, PASSWORD) as hon:
+    washing_machine = hon.appliances[0]
     pause_command = washing_machine.commands["pauseProgram"]
     await pause_command.send()
 ```
 
 ### Set command parameter
 ```python
-async with HonConnection(USER, PASSWORD) as hon:
-    washing_machine = hon.devices[0]
+async with Hon(USER, PASSWORD) as hon:
+    washing_machine = hon.appliances[0]
     start_command = washing_machine.commands["startProgram"]
     for name, setting in start_command.settings:
         print("Setting", name)
@@ -100,8 +100,6 @@ This generates a huge output. It is recommended to pipe this into a file
 $ pyhOn translate fr > hon_fr.yaml
 $ pyhOn translate en --json > hon_en.json
 ```
-## Tested devices
-- Haier Washing Machine HW90
 
 ## Usage example
 This library is used for the custom [HomeAssistant Integration "Haier hOn"](https://github.com/Andre0512/hOn).

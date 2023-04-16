@@ -7,11 +7,11 @@ with open("README.md", "r") as f:
 
 setup(
     name="pyhOn",
-    version="0.5.0",
+    version="0.8.0b4",
     author="Andre Basche",
     description="Control hOn devices with python",
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     project_urls={
         "GitHub": "https://github.com/Andre0512/pyhOn",
         "PyPI": "https://pypi.org/project/pyhOn",
@@ -33,8 +33,8 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     entry_points={
-        'console_scripts': [
-            'pyhOn = pyhon.__main__:start',
+        "console_scripts": [
+            "pyhOn = pyhon.__main__:start",
         ]
-    }
+    },
 )
