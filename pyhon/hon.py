@@ -61,8 +61,9 @@ class Hon:
     async def setup(self) -> None:
         appliance: Dict
         for appliance in (await self.api.load_appliances())["payload"]["appliances"]:
-            for zone in range(int(appliance.get("zone", "0"))):
-                await self._create_appliance(appliance.copy(), zone=zone + 1)
+            if (zones := int(appliance.get("zone", "0"))) > 1:
+                for zone in range(zones):
+                    await self._create_appliance(appliance.copy(), zone=zone + 1)
             await self._create_appliance(appliance)
 
     async def close(self) -> None:
