@@ -62,11 +62,10 @@ class HonCommand:
         return self._ancillary_parameters
 
     async def send(self) -> bool:
-        parameters = {
-            name: parameter.value for name, parameter in self._parameters.items()
-        }
+        params = {k: v.value for k, v in self._parameters.items()}
+        ancillary_params = {k: v.value for k, v in self._ancillary_parameters.items()}
         return await self._api.send_command(
-            self._appliance, self._name, parameters, self.ancillary_parameters
+            self._appliance, self._name, params, ancillary_params
         )
 
     @property
