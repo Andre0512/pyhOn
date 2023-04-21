@@ -228,7 +228,10 @@ class HonAuth:
             except json.JSONDecodeError:
                 await self._error_logger(response)
                 return False
-            self._cognito_token = json_data["cognitoUser"]["Token"]
+            self._cognito_token = json_data.get("cognitoUser", {}).get("Token", "")
+            if not self._cognito_token:
+                _LOGGER.error(json_data)
+                raise exceptions.HonAuthenticationError()
         return True
 
     async def authenticate(self) -> None:
