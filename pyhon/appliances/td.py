@@ -1,3 +1,6 @@
+from pyhon.parameter.fixed import HonParameterFixed
+
+
 class Appliance:
     def data(self, data):
         if data["attributes"]["lastConnEvent"]["category"] == "DISCONNECTED":
@@ -7,4 +10,7 @@ class Appliance:
         return data
 
     def settings(self, settings):
+        dry_level = settings["startProgram.dryLevel"]
+        if isinstance(dry_level, HonParameterFixed) and dry_level.value == "11":
+            settings.pop("startProgram.dryLevel", None)
         return settings
