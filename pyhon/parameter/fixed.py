@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from pyhon.parameter.base import HonParameter
 
@@ -19,3 +19,7 @@ class HonParameterFixed(HonParameter):
     def value(self, value: str | float) -> None:
         # Fixed values seems being not so fixed as thought
         self._value = value
+
+    @property
+    def values(self) -> List[str]:
+        return list(str(self.value))

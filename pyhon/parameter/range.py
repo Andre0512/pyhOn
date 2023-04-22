@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from pyhon.parameter.base import HonParameter
 
@@ -47,3 +47,7 @@ class HonParameterRange(HonParameter):
             raise ValueError(
                 f"Allowed: min {self._min} max {self._max} step {self._step}"
             )
+
+    @property
+    def values(self) -> List[str]:
+        return [str(i) for i in range(int(self.min), int(self.max) + 1, int(self.step))]
