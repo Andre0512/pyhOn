@@ -1,4 +1,5 @@
 import importlib
+import logging
 from contextlib import suppress
 from typing import Optional, Dict, Any
 from typing import TYPE_CHECKING
@@ -9,6 +10,9 @@ from pyhon.parameter.fixed import HonParameterFixed
 
 if TYPE_CHECKING:
     from pyhon import HonAPI
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HonAppliance:
@@ -183,7 +187,10 @@ class HonAppliance:
 
     async def load_attributes(self):
         self._attributes = await self._api.load_attributes(self)
-        for name, values in self._attributes.pop("shadow").get("parameters").items():
+        _LOGGER.warning(self._attributes)
+        for name, values in (
+            self._attributes.pop("shadow", {}).get("parameters", {}).items()
+        ):
             self._attributes.setdefault("parameters", {})[name] = values["parNewVal"]
 
     async def load_statistics(self):

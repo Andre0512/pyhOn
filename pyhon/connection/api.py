@@ -12,7 +12,7 @@ from pyhon.connection.auth import HonAuth
 from pyhon.connection.handler.anonym import HonAnonymousConnectionHandler
 from pyhon.connection.handler.hon import HonConnectionHandler
 
-_LOGGER = logging.getLogger()
+_LOGGER = logging.getLogger(__name__)
 
 
 class HonAPI:
