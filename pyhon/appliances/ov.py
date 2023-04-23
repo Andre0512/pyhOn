@@ -1,4 +1,7 @@
 class Appliance:
+    def __init__(self, appliance):
+        self.parent = appliance
+
     def data(self, data):
         if data["attributes"]["lastConnEvent"]["category"] == "DISCONNECTED":
             data["attributes"]["parameters"]["temp"] = "0"

@@ -33,7 +33,7 @@ class HonAppliance:
         try:
             self._extra = importlib.import_module(
                 f"pyhon.appliances.{self.appliance_type.lower()}"
-            ).Appliance()
+            ).Appliance(self)
         except ModuleNotFoundError:
             self._extra = None
 

@@ -31,3 +31,12 @@ class HonParameterProgram(HonParameterEnum):
     def values(self) -> List[str]:
         values = [v for v in self._programs if all(f not in v for f in self._FILTER)]
         return sorted(values)
+
+    @property
+    def ids(self):
+        values = {
+            int(p.parameters["prCode"].value): n
+            for i, (n, p) in enumerate(self._programs.items())
+            if "iot_" not in n and p.parameters.get("prCode")
+        }
+        return dict(sorted(values.items()))
