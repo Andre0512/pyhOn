@@ -89,8 +89,6 @@ class HonCommand:
         for key, parameter in (
             command._parameters | command._ancillary_parameters
         ).items():
-            if isinstance(parameter, HonParameterFixed):
-                continue
             if key not in keys:
                 keys.append(key)
         return keys
@@ -108,7 +106,6 @@ class HonCommand:
 
     @property
     def settings(self) -> Dict[str, HonParameter]:
-        """Parameters with typology enum and range"""
         return {
             s: param
             for s in self.setting_keys
