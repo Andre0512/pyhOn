@@ -182,13 +182,14 @@ class HonAuth:
             await self._error_logger(response)
             return ""
 
-    def _parse_token_data(self, text: str) -> None:
+    def _parse_token_data(self, text: str) -> bool:
         if access_token := re.findall("access_token=(.*?)&", text):
             self._access_token = access_token[0]
         if refresh_token := re.findall("refresh_token=(.*?)&", text):
             self._refresh_token = refresh_token[0]
         if id_token := re.findall("id_token=(.*?)&", text):
             self._id_token = id_token[0]
+        return True if access_token and refresh_token and id_token else False
 
     async def _get_token(self, url: str) -> bool:
         async with self._request.get(url) as response:
@@ -214,7 +215,9 @@ class HonAuth:
             if response.status != 200:
                 await self._error_logger(response)
                 return False
-            self._parse_token_data(await response.text())
+            if not self._parse_token_data(await response.text()):
+                await self._error_logger(response)
+                return False
         return True
 
     async def _api_auth(self) -> bool:
