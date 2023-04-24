@@ -24,7 +24,7 @@ class HonCommand:
         self._api: HonAPI = api
         self._appliance: "HonAppliance" = appliance
         self._name: str = name
-        self._programs: Optional[Dict[str, "HonCommand"]] = programs or {}
+        self._programs: Optional[Dict[str, "HonCommand"]] = programs
         self._program_name: str = program_name
         self._description: str = attributes.get("description", "")
         self._parameters: Dict[str, HonParameter] = self._create_parameters(

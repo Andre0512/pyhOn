@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 
 class HonParameter:
@@ -16,6 +16,10 @@ class HonParameter:
     @property
     def value(self) -> str | float:
         return self._value if self._value is not None else "0"
+
+    @property
+    def values(self) -> List[str]:
+        return list(str(self.value))
 
     @property
     def category(self) -> str:

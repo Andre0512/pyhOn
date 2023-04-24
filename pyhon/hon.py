@@ -47,7 +47,7 @@ class Hon:
 
     async def _create_appliance(self, appliance_data: Dict[str, Any], zone=0) -> None:
         appliance = HonAppliance(self._api, appliance_data, zone=zone)
-        if appliance.mac_address is None:
+        if appliance.mac_address == "":
             return
         await asyncio.gather(
             *[

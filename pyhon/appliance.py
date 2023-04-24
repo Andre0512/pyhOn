@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyhon import helper
 from pyhon.commands import HonCommand
+from pyhon.parameter.base import HonParameter
 from pyhon.parameter.fixed import HonParameterFixed
 
 if TYPE_CHECKING:
@@ -169,7 +170,8 @@ class HonAppliance:
     def settings(self):
         result = {}
         for name, command in self._commands.items():
-            for key, setting in command.settings.items():
+            for key in command.setting_keys:
+                setting = command.settings.get(key, HonParameter(key, {}))
                 result[f"{name}.{key}"] = setting
         if self._extra:
             return self._extra.settings(result)
@@ -187,10 +189,7 @@ class HonAppliance:
 
     async def load_attributes(self):
         self._attributes = await self._api.load_attributes(self)
-        _LOGGER.warning(self._attributes)
-        for name, values in (
-            self._attributes.pop("shadow", {}).get("parameters", {}).items()
-        ):
+        for name, values in self._attributes.pop("shadow").get("parameters").items():
             self._attributes.setdefault("parameters", {})[name] = values["parNewVal"]
 
     async def load_statistics(self):
@@ -221,4 +220,4 @@ class HonAppliance:
             {"commands": helper.create_command(self.commands)},
             whitespace="\u200B \u200B ",
         )
-        return result.replace(self.mac_address, "12-34-56-78-90-ab")
+        return result.replace(self.mac_address, "xx-xx-xx-xx-xx-xx")
