@@ -29,6 +29,7 @@ class HonCommand:
         self._protocol_type: str = attributes.pop("protocolType", "")
         self._parameters: Dict[str, HonParameter] = {}
         self._data: Dict[str, Any] = {}
+        self._available_settings: Dict[str, HonParameter] = {}
         self._load_parameters(attributes)
 
     def __repr__(self) -> str:
@@ -44,6 +45,10 @@ class HonCommand:
 
     @property
     def parameters(self) -> Dict[str, HonParameter]:
+        return self._parameters
+
+    @property
+    def settings(self) -> Dict[str, HonParameter]:
         return self._parameters
 
     @property
@@ -76,10 +81,8 @@ class HonCommand:
                 self._data[name] = data
                 return
         if self._category_name:
-            if not self._categories:
-                self._parameters["program"] = HonParameterProgram(
-                    "program", self, "custom"
-                )
+            name = "program" if "PROGRAM" in self._category_name else "category"
+            self._parameters[name] = HonParameterProgram(name, self, "custom")
 
     async def send(self) -> bool:
         params = self.parameter_groups["parameters"]
@@ -119,7 +122,7 @@ class HonCommand:
         return first
 
     @property
-    def settings(self) -> Dict[str, HonParameter]:
+    def available_settings(self) -> Dict[str, HonParameter]:
         result: Dict[str, HonParameter] = {}
         for command in self.categories.values():
             for name, parameter in command.parameters.items():

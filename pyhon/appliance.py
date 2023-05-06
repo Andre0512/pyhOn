@@ -1,12 +1,12 @@
 import importlib
 import logging
 from contextlib import suppress
+from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from typing import TYPE_CHECKING
 
 from pyhon import helper, exceptions
 from pyhon.commands import HonCommand
-from pyhon.parameter.base import HonParameter
 from pyhon.parameter.fixed import HonParameterFixed
 
 if TYPE_CHECKING:
@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HonAppliance:
+    _MINIMAL_UPDATE_INTERVAL = 5  # seconds
+
     def __init__(
         self, api: Optional["HonAPI"], info: Dict[str, Any], zone: int = 0
     ) -> None:
@@ -30,6 +32,7 @@ class HonAppliance:
         self._attributes: Dict = {}
         self._zone: int = zone
         self._additional_data: Dict[str, Any] = {}
+        self._last_update = None
 
         try:
             self._extra = importlib.import_module(
@@ -205,7 +208,12 @@ class HonAppliance:
         self._statistics = await self.api.load_statistics(self)
 
     async def update(self):
-        await self.load_attributes()
+        now = datetime.now()
+        if not self._last_update or self._last_update < now - timedelta(
+            seconds=self._MINIMAL_UPDATE_INTERVAL
+        ):
+            self._last_update = now
+            await self.load_attributes()
 
     @property
     def command_parameters(self):
@@ -216,10 +224,18 @@ class HonAppliance:
         result = {}
         for name, command in self._commands.items():
             for key in command.setting_keys:
-                setting = command.settings.get(key, HonParameter(key, {}, name))
+                setting = command.settings.get(key)
                 result[f"{name}.{key}"] = setting
         if self._extra:
             return self._extra.settings(result)
+        return result
+
+    @property
+    def available_settings(self):
+        result = []
+        for name, command in self._commands.items():
+            for key in command.setting_keys:
+                result.append(f"{name}.{key}")
         return result
 
     @property

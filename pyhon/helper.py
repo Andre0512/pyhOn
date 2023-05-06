@@ -1,6 +1,3 @@
-from pyhon.parameter.base import HonParameter
-
-
 def key_print(data, key="", start=True):
     result = ""
     if isinstance(data, list):
@@ -47,21 +44,12 @@ def pretty_print(data, key="", intend=0, is_list=False, whitespace="  "):
     return result
 
 
-def get_parameter(command, parameter):
-    if programs := command.categories:
-        for program in programs.values():
-            if data := program.settings.get(parameter):
-                return data
-    return command.settings.get(parameter)
-
-
 def create_command(commands, concat=False):
     result = {}
     for name, command in commands.items():
         if not concat:
             result[name] = {}
-        for parameter in command.setting_keys:
-            data = get_parameter(command, parameter)
+        for parameter, data in command.available_settings.items():
             if data.typology == "enum":
                 value = data.values
             elif data.typology == "range":
