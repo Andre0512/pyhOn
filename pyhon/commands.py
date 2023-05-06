@@ -85,8 +85,8 @@ class HonCommand:
             self._parameters[name] = HonParameterProgram(name, self, "custom")
 
     async def send(self) -> bool:
-        params = self.parameter_groups["parameters"]
-        ancillary_params = self.parameter_groups["ancillary_parameters"]
+        params = self.parameter_groups.get("parameters", {})
+        ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         return await self._api.send_command(
             self._appliance, self._name, params, ancillary_params
         )
