@@ -23,7 +23,7 @@ class HonParameterProgram(HonParameterEnum):
     @value.setter
     def value(self, value: str) -> None:
         if value in self.values:
-            self._command.program = value
+            self._command.category = value
         else:
             raise ValueError(f"Allowed values {self.values}")
 

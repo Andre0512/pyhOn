@@ -78,12 +78,7 @@ async def main():
                     )
                 )
             else:
-                print(helper.pretty_print({"data": device.data}))
-                print(
-                    helper.pretty_print(
-                        {"settings": helper.create_command(device.commands)}
-                    )
-                )
+                print(device.diagnose("  "))
 
 
 def start():

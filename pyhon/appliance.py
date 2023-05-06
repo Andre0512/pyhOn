@@ -4,7 +4,7 @@ from contextlib import suppress
 from typing import Optional, Dict, Any
 from typing import TYPE_CHECKING
 
-from pyhon import helper
+from pyhon import helper, exceptions
 from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.fixed import HonParameterFixed
@@ -29,7 +29,7 @@ class HonAppliance:
         self._statistics: Dict = {}
         self._attributes: Dict = {}
         self._zone: int = zone
-        self._additional_data = {}
+        self._additional_data: Dict[str, Any] = {}
 
         try:
             self._extra = importlib.import_module(
@@ -119,8 +119,14 @@ class HonAppliance:
     def zone(self) -> int:
         return self._zone
 
+    @property
+    def api(self) -> "HonAPI":
+        if self._api is None:
+            raise exceptions.NoAuthenticationException
+        return self._api
+
     async def _recover_last_command_states(self):
-        command_history = await self._api.command_history(self)
+        command_history = await self.api.command_history(self)
         for name, command in self._commands.items():
             last = next(
                 (
@@ -170,7 +176,6 @@ class HonAppliance:
                     HonCommand(
                         command,
                         data,
-                        self._api,
                         self,
                         category_name=category,
                         categories=categories,
@@ -178,35 +183,33 @@ class HonAppliance:
                 ]
             else:
                 commands += self._get_categories(command, data)
+        elif category:
+            self._additional_data.setdefault(command, {})[category] = data
         else:
             self._additional_data[command] = data
         return commands
 
     async def load_commands(self):
-        raw = await self._api.load_commands(self)
+        raw = await self.api.load_commands(self)
         self._appliance_model = raw.pop("applianceModel")
         raw.pop("dictionaryId")
         self._commands = self._get_commands(raw)
         await self._recover_last_command_states()
 
     async def load_attributes(self):
-        self._attributes = await self._api.load_attributes(self)
+        self._attributes = await self.api.load_attributes(self)
         for name, values in self._attributes.pop("shadow").get("parameters").items():
             self._attributes.setdefault("parameters", {})[name] = values["parNewVal"]
 
     async def load_statistics(self):
-        self._statistics = await self._api.load_statistics(self)
+        self._statistics = await self.api.load_statistics(self)
 
     async def update(self):
         await self.load_attributes()
 
     @property
-    def parameters(self):
-        result = {}
-        for name, command in self._commands.items():
-            for key, parameter in command.parameters.items():
-                result.setdefault(name, {})[key] = parameter.value
-        return result
+    def command_parameters(self):
+        return {n: c.parameter_value for n, c in self._commands.items()}
 
     @property
     def settings(self):
@@ -226,20 +229,27 @@ class HonAppliance:
             "appliance": self.info,
             "statistics": self.statistics,
             "additional_data": self._additional_data,
-            **self.parameters,
+            **self.command_parameters,
         }
         if self._extra:
             return self._extra.data(result)
         return result
 
-    @property
-    def diagnose(self):
-        data = self.data.copy()
+    def diagnose(self, whitespace="\u200B \u200B "):
+        data = {
+            "attributes": self.attributes.copy(),
+            "appliance": self.info,
+            "additional_data": self._additional_data,
+        }
+        data |= {n: c.parameter_groups for n, c in self._commands.items()}
+        extra = {n: c.data for n, c in self._commands.items() if c.data}
+        if extra:
+            data |= {"extra_command_data": extra}
         for sensible in ["PK", "SK", "serialNumber", "code", "coords"]:
             data["appliance"].pop(sensible, None)
-        result = helper.pretty_print({"data": self.data}, whitespace="\u200B \u200B ")
+        result = helper.pretty_print({"data": data}, whitespace=whitespace)
         result += helper.pretty_print(
             {"commands": helper.create_command(self.commands)},
-            whitespace="\u200B \u200B ",
+            whitespace=whitespace,
         )
         return result.replace(self.mac_address, "xx-xx-xx-xx-xx-xx")

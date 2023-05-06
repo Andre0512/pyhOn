@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
 
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.enum import HonParameterEnum
@@ -16,12 +16,11 @@ class HonCommand:
         self,
         name: str,
         attributes: Dict[str, Any],
-        api: "HonAPI",
         appliance: "HonAppliance",
         categories: Optional[Dict[str, "HonCommand"]] = None,
         category_name: str = "",
     ):
-        self._api: HonAPI = api
+        self._api: HonAPI = appliance.api
         self._appliance: "HonAppliance" = appliance
         self._name: str = name
         self._categories: Optional[Dict[str, "HonCommand"]] = categories
@@ -29,7 +28,7 @@ class HonCommand:
         self._description: str = attributes.pop("description", "")
         self._protocol_type: str = attributes.pop("protocolType", "")
         self._parameters: Dict[str, HonParameter] = {}
-        self._data = {}
+        self._data: Dict[str, Any] = {}
         self._load_parameters(attributes)
 
     def __repr__(self) -> str:
@@ -46,6 +45,17 @@ class HonCommand:
     @property
     def parameters(self) -> Dict[str, HonParameter]:
         return self._parameters
+
+    @property
+    def parameter_groups(self) -> Dict[str, Dict[str, Union[str, float]]]:
+        result: Dict[str, Dict[str, Union[str, float]]] = {}
+        for name, parameter in self._parameters.items():
+            result.setdefault(parameter.group, {})[name] = parameter.value
+        return result
+
+    @property
+    def parameter_value(self) -> Dict[str, Union[str, float]]:
+        return {n: p.value for n, p in self._parameters.items()}
 
     def _load_parameters(self, attributes):
         for key, items in attributes.items():
@@ -67,16 +77,13 @@ class HonCommand:
                 return
         if self._category_name:
             if not self._categories:
-                self._parameters["program"] = HonParameterProgram("program", self, name)
-
-    def _parameters_by_group(self, group):
-        return {
-            name: v.value for name, v in self._parameters.items() if v.group == group
-        }
+                self._parameters["program"] = HonParameterProgram(
+                    "program", self, "custom"
+                )
 
     async def send(self) -> bool:
-        params = self._parameters_by_group("parameters")
-        ancillary_params = self._parameters_by_group("ancillary_parameters")
+        params = self.parameter_groups["parameters"]
+        ancillary_params = self.parameter_groups["ancillary_parameters"]
         return await self._api.send_command(
             self._appliance, self._name, params, ancillary_params
         )
@@ -101,12 +108,22 @@ class HonCommand:
             {param for cmd in self.categories.values() for param in cmd.parameters}
         )
 
+    @staticmethod
+    def _more_options(first: HonParameter, second: HonParameter):
+        if isinstance(first, HonParameterFixed) and not isinstance(
+            second, HonParameterFixed
+        ):
+            return second
+        if len(second.values) > len(first.values):
+            return second
+        return first
+
     @property
     def settings(self) -> Dict[str, HonParameter]:
-        result = {}
+        result: Dict[str, HonParameter] = {}
         for command in self.categories.values():
             for name, parameter in command.parameters.items():
                 if name in result:
-                    continue
+                    result[name] = self._more_options(result[name], parameter)
                 result[name] = parameter
         return result
