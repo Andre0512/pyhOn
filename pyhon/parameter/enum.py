@@ -4,8 +4,8 @@ from pyhon.parameter.base import HonParameter
 
 
 class HonParameterEnum(HonParameter):
-    def __init__(self, key: str, attributes: Dict[str, Any]) -> None:
-        super().__init__(key, attributes)
+    def __init__(self, key: str, attributes: Dict[str, Any], group: str) -> None:
+        super().__init__(key, attributes, group)
         self._default = attributes.get("defaultValue")
         self._value = self._default or "0"
         self._values: List[str] = attributes.get("enumValues", [])

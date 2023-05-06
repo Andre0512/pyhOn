@@ -11,8 +11,8 @@ def str_to_float(string: str | float) -> float:
 
 
 class HonParameterRange(HonParameter):
-    def __init__(self, key: str, attributes: Dict[str, Any]) -> None:
-        super().__init__(key, attributes)
+    def __init__(self, key: str, attributes: Dict[str, Any], group: str) -> None:
+        super().__init__(key, attributes, group)
         self._min: float = str_to_float(attributes["minimumValue"])
         self._max: float = str_to_float(attributes["maximumValue"])
         self._step: float = str_to_float(attributes["incrementValue"])

@@ -48,7 +48,7 @@ def pretty_print(data, key="", intend=0, is_list=False, whitespace="  "):
 
 
 def get_parameter(command, parameter):
-    if programs := command.programs:
+    if programs := command.categories:
         for program in programs.values():
             if data := program.settings.get(parameter):
                 return data

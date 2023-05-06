@@ -2,12 +2,13 @@ from typing import Dict, Any, List
 
 
 class HonParameter:
-    def __init__(self, key: str, attributes: Dict[str, Any]) -> None:
+    def __init__(self, key: str, attributes: Dict[str, Any], group: str) -> None:
         self._key = key
         self._category: str = attributes.get("category", "")
         self._typology: str = attributes.get("typology", "")
         self._mandatory: int = attributes.get("mandatory", 0)
         self._value: str | float = ""
+        self._group: str = group
 
     @property
     def key(self) -> str:
@@ -19,7 +20,7 @@ class HonParameter:
 
     @property
     def values(self) -> List[str]:
-        return list(str(self.value))
+        return [str(self.value)]
 
     @property
     def category(self) -> str:
@@ -32,3 +33,7 @@ class HonParameter:
     @property
     def mandatory(self) -> int:
         return self._mandatory
+
+    @property
+    def group(self) -> str:
+        return self._group

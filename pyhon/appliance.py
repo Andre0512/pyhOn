@@ -12,7 +12,6 @@ from pyhon.parameter.fixed import HonParameterFixed
 if TYPE_CHECKING:
     from pyhon import HonAPI
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,6 +29,7 @@ class HonAppliance:
         self._statistics: Dict = {}
         self._attributes: Dict = {}
         self._zone: int = zone
+        self._additional_data = {}
 
         try:
             self._extra = importlib.import_module(
@@ -112,12 +112,16 @@ class HonAppliance:
         return self._info
 
     @property
+    def additional_data(self):
+        return self._additional_data
+
+    @property
     def zone(self) -> int:
         return self._zone
 
-    async def _recover_last_command_states(self, commands):
+    async def _recover_last_command_states(self):
         command_history = await self._api.command_history(self)
-        for name, command in commands.items():
+        for name, command in self._commands.items():
             last = next(
                 (
                     index
@@ -129,8 +133,8 @@ class HonAppliance:
             if last is None:
                 continue
             parameters = command_history[last].get("command", {}).get("parameters", {})
-            if command.programs and parameters.get("program"):
-                command.program = parameters.pop("program").split(".")[-1].lower()
+            if command.categories and parameters.get("category"):
+                command.category = parameters.pop("category").split(".")[-1].lower()
                 command = self.commands[name]
             for key, data in command.settings.items():
                 if (
@@ -140,52 +144,50 @@ class HonAppliance:
                     with suppress(ValueError):
                         data.value = parameters.get(key)
 
+    def _get_categories(self, command, data):
+        categories = {}
+        for category, value in data.items():
+            result = self._get_command(value, command, category, categories)
+            if result:
+                if "PROGRAM" in category:
+                    category = category.split(".")[-1].lower()
+                categories[category] = result[0]
+        if categories:
+            return [list(categories.values())[0]]
+        return []
+
+    def _get_commands(self, data):
+        commands = []
+        for command, value in data.items():
+            commands += self._get_command(value, command, "")
+        return {c.name: c for c in commands}
+
+    def _get_command(self, data, command="", category="", categories=None):
+        commands = []
+        if isinstance(data, dict):
+            if data.get("description") and data.get("protocolType", None):
+                commands += [
+                    HonCommand(
+                        command,
+                        data,
+                        self._api,
+                        self,
+                        category_name=category,
+                        categories=categories,
+                    )
+                ]
+            else:
+                commands += self._get_categories(command, data)
+        else:
+            self._additional_data[command] = data
+        return commands
+
     async def load_commands(self):
         raw = await self._api.load_commands(self)
         self._appliance_model = raw.pop("applianceModel")
-        for item in ["settings", "options", "dictionaryId"]:
-            raw.pop(item)
-        commands = {}
-        for command, attr in raw.items():
-            if "parameters" in attr:
-                commands[command] = HonCommand(command, attr, self._api, self)
-            elif "parameters" in attr[list(attr)[0]]:
-                multi = {}
-                for program, attr2 in attr.items():
-                    program = program.split(".")[-1].lower()
-                    cmd = HonCommand(
-                        command,
-                        attr2,
-                        self._api,
-                        self,
-                        programs=multi,
-                        program_name=program,
-                    )
-                    multi[program] = cmd
-                    commands[command] = cmd
-        self._commands = commands
-        await self._recover_last_command_states(commands)
-
-    @property
-    def settings(self):
-        result = {}
-        for name, command in self._commands.items():
-            for key in command.setting_keys:
-                setting = command.settings.get(key, HonParameter(key, {}))
-                result[f"{name}.{key}"] = setting
-        if self._extra:
-            return self._extra.settings(result)
-        return result
-
-    @property
-    def parameters(self):
-        result = {}
-        for name, command in self._commands.items():
-            for key, parameter in (
-                command.parameters | command.ancillary_parameters
-            ).items():
-                result.setdefault(name, {})[key] = parameter.value
-        return result
+        raw.pop("dictionaryId")
+        self._commands = self._get_commands(raw)
+        await self._recover_last_command_states()
 
     async def load_attributes(self):
         self._attributes = await self._api.load_attributes(self)
@@ -199,11 +201,31 @@ class HonAppliance:
         await self.load_attributes()
 
     @property
+    def parameters(self):
+        result = {}
+        for name, command in self._commands.items():
+            for key, parameter in command.parameters.items():
+                result.setdefault(name, {})[key] = parameter.value
+        return result
+
+    @property
+    def settings(self):
+        result = {}
+        for name, command in self._commands.items():
+            for key in command.setting_keys:
+                setting = command.settings.get(key, HonParameter(key, {}, name))
+                result[f"{name}.{key}"] = setting
+        if self._extra:
+            return self._extra.settings(result)
+        return result
+
+    @property
     def data(self):
         result = {
             "attributes": self.attributes,
             "appliance": self.info,
             "statistics": self.statistics,
+            "additional_data": self._additional_data,
             **self.parameters,
         }
         if self._extra:

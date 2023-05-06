@@ -109,6 +109,18 @@ class HonAPI:
                 return activity
         return {}
 
+    async def appliance_model(self, appliance: HonAppliance) -> Dict:
+        url: str = f"{const.API_URL}/commands/v1/appliance-model"
+        params: Dict = {
+            "code": appliance.info["code"],
+            "macAddress": appliance.mac_address,
+        }
+        async with self._hon.get(url, params=params) as response:
+            result: Dict = await response.json()
+            if result and (activity := result.get("attributes")):
+                return activity
+        return {}
+
     async def load_attributes(self, appliance: HonAppliance) -> Dict:
         params: Dict = {
             "macAddress": appliance.mac_address,
@@ -161,7 +173,7 @@ class HonAPI:
         return False
 
     async def appliance_configuration(self) -> Dict:
-        url: str = f"{const.API_URL}/config/v1/appliance-configuration"
+        url: str = f"{const.API_URL}/config/v1/program-list-rules"
         async with self._hon_anonymous.get(url) as response:
             result: Dict = await response.json()
             if result and (data := result.get("payload")):

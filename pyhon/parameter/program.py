@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 class HonParameterProgram(HonParameterEnum):
     _FILTER = ["iot_recipe", "iot_guided"]
 
-    def __init__(self, key: str, command: "HonCommand") -> None:
-        super().__init__(key, {})
+    def __init__(self, key: str, command: "HonCommand", group: str) -> None:
+        super().__init__(key, {}, group)
         self._command = command
-        self._value: str = command.program
-        self._programs: Dict[str, "HonCommand"] = command.programs
+        self._value: str = command.category
+        self._programs: Dict[str, "HonCommand"] = command.categories
         self._typology: str = "enum"
 
     @property

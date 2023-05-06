@@ -18,97 +18,95 @@ class HonCommand:
         attributes: Dict[str, Any],
         api: "HonAPI",
         appliance: "HonAppliance",
-        programs: Optional[Dict[str, "HonCommand"]] = None,
-        program_name: str = "",
+        categories: Optional[Dict[str, "HonCommand"]] = None,
+        category_name: str = "",
     ):
         self._api: HonAPI = api
         self._appliance: "HonAppliance" = appliance
         self._name: str = name
-        self._programs: Optional[Dict[str, "HonCommand"]] = programs
-        self._program_name: str = program_name
-        self._description: str = attributes.get("description", "")
-        self._parameters: Dict[str, HonParameter] = self._create_parameters(
-            attributes.get("parameters", {})
-        )
-        self._ancillary_parameters: Dict[str, HonParameter] = self._create_parameters(
-            attributes.get("ancillaryParameters", {})
-        )
+        self._categories: Optional[Dict[str, "HonCommand"]] = categories
+        self._category_name: str = category_name
+        self._description: str = attributes.pop("description", "")
+        self._protocol_type: str = attributes.pop("protocolType", "")
+        self._parameters: Dict[str, HonParameter] = {}
+        self._data = {}
+        self._load_parameters(attributes)
 
     def __repr__(self) -> str:
         return f"{self._name} command"
 
-    def _create_parameters(self, parameters: Dict) -> Dict[str, HonParameter]:
-        result: Dict[str, HonParameter] = {}
-        for parameter, attributes in parameters.items():
-            if parameter == "zoneMap" and self._appliance.zone:
-                attributes["default"] = self._appliance.zone
-            match attributes.get("typology"):
-                case "range":
-                    result[parameter] = HonParameterRange(parameter, attributes)
-                case "enum":
-                    result[parameter] = HonParameterEnum(parameter, attributes)
-                case "fixed":
-                    result[parameter] = HonParameterFixed(parameter, attributes)
-        if self._programs:
-            result["program"] = HonParameterProgram("program", self)
-        return result
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def data(self):
+        return self._data
 
     @property
     def parameters(self) -> Dict[str, HonParameter]:
         return self._parameters
 
-    @property
-    def ancillary_parameters(self) -> Dict[str, HonParameter]:
-        return self._ancillary_parameters
+    def _load_parameters(self, attributes):
+        for key, items in attributes.items():
+            for name, data in items.items():
+                self._create_parameters(data, name, key)
+
+    def _create_parameters(self, data: Dict, name: str, parameter: str) -> None:
+        if name == "zoneMap" and self._appliance.zone:
+            data["default"] = self._appliance.zone
+        match data.get("typology"):
+            case "range":
+                self._parameters[name] = HonParameterRange(name, data, parameter)
+            case "enum":
+                self._parameters[name] = HonParameterEnum(name, data, parameter)
+            case "fixed":
+                self._parameters[name] = HonParameterFixed(name, data, parameter)
+            case _:
+                self._data[name] = data
+                return
+        if self._category_name:
+            if not self._categories:
+                self._parameters["program"] = HonParameterProgram("program", self, name)
+
+    def _parameters_by_group(self, group):
+        return {
+            name: v.value for name, v in self._parameters.items() if v.group == group
+        }
 
     async def send(self) -> bool:
-        params = {k: v.value for k, v in self._parameters.items()}
-        ancillary_params = {k: v.value for k, v in self._ancillary_parameters.items()}
+        params = self._parameters_by_group("parameters")
+        ancillary_params = self._parameters_by_group("ancillary_parameters")
         return await self._api.send_command(
             self._appliance, self._name, params, ancillary_params
         )
 
     @property
-    def programs(self) -> Dict[str, "HonCommand"]:
-        if self._programs is None:
-            return {}
-        return self._programs
+    def categories(self) -> Dict[str, "HonCommand"]:
+        if self._categories is None:
+            return {"_": self}
+        return self._categories
 
     @property
-    def program(self) -> str:
-        return self._program_name
+    def category(self) -> str:
+        return self._category_name
 
-    @program.setter
-    def program(self, program: str) -> None:
-        self._appliance.commands[self._name] = self.programs[program]
-
-    def _get_settings_keys(self, command: Optional["HonCommand"] = None) -> List[str]:
-        if command is None:
-            command = self
-        keys = []
-        for key, parameter in (
-            command._parameters | command._ancillary_parameters
-        ).items():
-            if key not in keys:
-                keys.append(key)
-        return keys
+    @category.setter
+    def category(self, category: str) -> None:
+        self._appliance.commands[self._name] = self.categories[category]
 
     @property
     def setting_keys(self) -> List[str]:
-        if not self._programs:
-            return self._get_settings_keys()
-        result = [
-            key
-            for cmd in self._programs.values()
-            for key in self._get_settings_keys(cmd)
-        ]
-        return list(set(result + ["program"]))
+        return list(
+            {param for cmd in self.categories.values() for param in cmd.parameters}
+        )
 
     @property
     def settings(self) -> Dict[str, HonParameter]:
-        return {
-            s: param
-            for s in self.setting_keys
-            if (param := self._parameters.get(s)) is not None
-            or (param := self._ancillary_parameters.get(s)) is not None
-        }
+        result = {}
+        for command in self.categories.values():
+            for name, parameter in command.parameters.items():
+                if name in result:
+                    continue
+                result[name] = parameter
+        return result

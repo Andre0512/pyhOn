@@ -4,8 +4,8 @@ from pyhon.parameter.base import HonParameter
 
 
 class HonParameterFixed(HonParameter):
-    def __init__(self, key: str, attributes: Dict[str, Any]) -> None:
-        super().__init__(key, attributes)
+    def __init__(self, key: str, attributes: Dict[str, Any], group: str) -> None:
+        super().__init__(key, attributes, group)
         self._value = attributes.get("fixedValue", None)
 
     def __repr__(self) -> str:
