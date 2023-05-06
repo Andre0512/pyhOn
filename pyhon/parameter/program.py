@@ -12,7 +12,10 @@ class HonParameterProgram(HonParameterEnum):
     def __init__(self, key: str, command: "HonCommand", group: str) -> None:
         super().__init__(key, {}, group)
         self._command = command
-        self._value: str = command.category
+        if "PROGRAM" in command.category:
+            self._value: str = command.category.split(".")[-1].lower()
+        else:
+            self._value: str = command.category
         self._programs: Dict[str, "HonCommand"] = command.categories
         self._typology: str = "enum"
 

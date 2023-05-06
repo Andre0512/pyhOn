@@ -142,8 +142,11 @@ class HonAppliance:
             if last is None:
                 continue
             parameters = command_history[last].get("command", {}).get("parameters", {})
-            if command.categories and parameters.get("category"):
-                command.category = parameters.pop("category").split(".")[-1].lower()
+            if command.categories:
+                if parameters.get("program"):
+                    command.category = parameters.pop("program").split(".")[-1].lower()
+                else:
+                    command.category = parameters.pop("category")
                 command = self.commands[name]
             for key, data in command.settings.items():
                 if (
