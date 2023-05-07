@@ -200,7 +200,7 @@ class HonAppliance:
     async def load_commands(self):
         raw = await self.api.load_commands(self)
         self._appliance_model = raw.pop("applianceModel")
-        raw.pop("dictionaryId")
+        raw.pop("dictionaryId", None)
         self._commands = self._get_commands(raw)
         await self._recover_last_command_states()
 
@@ -256,18 +256,21 @@ class HonAppliance:
             return self._extra.data(result)
         return result
 
-    def diagnose(self, whitespace="\u200B \u200B "):
+    def diagnose(self, whitespace="\u200B \u200B ", command_only=False):
         data = {
             "attributes": self.attributes.copy(),
             "appliance": self.info,
             "additional_data": self._additional_data,
         }
+        if command_only:
+            data.pop("attributes")
+            data.pop("appliance")
         data |= {n: c.parameter_groups for n, c in self._commands.items()}
         extra = {n: c.data for n, c in self._commands.items() if c.data}
         if extra:
             data |= {"extra_command_data": extra}
         for sensible in ["PK", "SK", "serialNumber", "code", "coords"]:
-            data["appliance"].pop(sensible, None)
+            data.get("appliance", {}).pop(sensible, None)
         result = helper.pretty_print({"data": data}, whitespace=whitespace)
         result += helper.pretty_print(
             {"commands": helper.create_command(self.commands)},

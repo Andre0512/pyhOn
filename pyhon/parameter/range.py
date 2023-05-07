@@ -32,6 +32,8 @@ class HonParameterRange(HonParameter):
 
     @property
     def step(self) -> float:
+        if not self._step:
+            return 1
         return self._step
 
     @property

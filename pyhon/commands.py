@@ -103,7 +103,8 @@ class HonCommand:
 
     @category.setter
     def category(self, category: str) -> None:
-        self._appliance.commands[self._name] = self.categories[category]
+        if category in self.categories:
+            self._appliance.commands[self._name] = self.categories[category]
 
     @property
     def setting_keys(self) -> List[str]:
