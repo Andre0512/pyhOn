@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from pyhon import helper, exceptions
 from pyhon.commands import HonCommand
+from pyhon.parameter.base import HonParameter
 from pyhon.parameter.fixed import HonParameterFixed
 
 if TYPE_CHECKING:
@@ -33,6 +34,7 @@ class HonAppliance:
         self._zone: int = zone
         self._additional_data: Dict[str, Any] = {}
         self._last_update = None
+        self._default_setting = HonParameter("", {}, "")
 
         try:
             self._extra = importlib.import_module(
@@ -229,7 +231,7 @@ class HonAppliance:
         result = {}
         for name, command in self._commands.items():
             for key in command.setting_keys:
-                setting = command.settings.get(key)
+                setting = command.settings.get(key, self._default_setting)
                 result[f"{name}.{key}"] = setting
         if self._extra:
             return self._extra.settings(result)
