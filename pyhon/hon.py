@@ -10,9 +10,14 @@ from pyhon.appliance import HonAppliance
 
 
 class Hon:
-    def __init__(self, email: str, password: str, session: ClientSession | None = None):
-        self._email: str = email
-        self._password: str = password
+    def __init__(
+        self,
+        email: Optional[str] = "",
+        password: Optional[str] = "",
+        session: Optional[ClientSession] = None,
+    ):
+        self._email: Optional[str] = email
+        self._password: Optional[str] = password
         self._session: ClientSession | None = session
         self._appliances: List[HonAppliance] = []
         self._api: Optional[HonAPI] = None
@@ -34,9 +39,21 @@ class Hon:
             raise exceptions.NoAuthenticationException
         return self._api
 
+    @property
+    def email(self) -> str:
+        if not self._email:
+            raise ValueError("Missing email")
+        return self._email
+
+    @property
+    def password(self) -> str:
+        if not self._password:
+            raise ValueError("Missing password")
+        return self._password
+
     async def create(self) -> Self:
         self._api = await HonAPI(
-            self._email, self._password, session=self._session
+            self.email, self.password, session=self._session
         ).create()
         await self.setup()
         return self
@@ -44,6 +61,10 @@ class Hon:
     @property
     def appliances(self) -> List[HonAppliance]:
         return self._appliances
+
+    @appliances.setter
+    def appliances(self, appliances) -> None:
+        self._appliances = appliances
 
     async def _create_appliance(self, appliance_data: Dict[str, Any], zone=0) -> None:
         appliance = HonAppliance(self._api, appliance_data, zone=zone)

@@ -1,11 +1,13 @@
 import importlib
+import json
 import logging
 from contextlib import suppress
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional, Dict, Any
 from typing import TYPE_CHECKING
 
-from pyhon import helper, exceptions
+from pyhon import helper
 from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.fixed import HonParameterFixed
@@ -125,9 +127,7 @@ class HonAppliance:
         return self._zone
 
     @property
-    def api(self) -> "HonAPI":
-        if self._api is None:
-            raise exceptions.NoAuthenticationException
+    def api(self) -> Optional["HonAPI"]:
         return self._api
 
     async def _recover_last_command_states(self):
@@ -279,3 +279,34 @@ class HonAppliance:
             whitespace=whitespace,
         )
         return result.replace(self.mac_address, "xx-xx-xx-xx-xx-xx")
+
+
+class HonApplianceTest(HonAppliance):
+    def __init__(self, name):
+        super().__init__(None, {})
+        self._name = name
+        self.load_commands()
+        self._info = self._appliance_model
+
+    def load_commands(self):
+        device = Path(__file__).parent / "test_data" / f"{self._name}.json"
+        with open(str(device)) as f:
+            raw = json.loads(f.read())
+        self._appliance_model = raw.pop("applianceModel")
+        raw.pop("dictionaryId", None)
+        self._commands = self._get_commands(raw)
+
+    async def update(self):
+        return
+
+    @property
+    def nick_name(self) -> str:
+        return self._name
+
+    @property
+    def unique_id(self) -> str:
+        return self._name
+
+    @property
+    def mac_address(self) -> str:
+        return "xx-xx-xx-xx-xx-xx"

@@ -7,7 +7,7 @@ from pyhon.parameter.program import HonParameterProgram
 from pyhon.parameter.range import HonParameterRange
 
 if TYPE_CHECKING:
-    from pyhon import HonAPI
+    from pyhon import HonAPI, exceptions
     from pyhon.appliance import HonAppliance
 
 
@@ -20,7 +20,7 @@ class HonCommand:
         categories: Optional[Dict[str, "HonCommand"]] = None,
         category_name: str = "",
     ):
-        self._api: HonAPI = appliance.api
+        self._api: Optional[HonAPI] = appliance.api
         self._appliance: "HonAppliance" = appliance
         self._name: str = name
         self._categories: Optional[Dict[str, "HonCommand"]] = categories
@@ -38,6 +38,12 @@ class HonCommand:
     @property
     def name(self):
         return self._name
+
+    @property
+    def api(self) -> "HonAPI":
+        if self._api is None:
+            raise exceptions.NoAuthenticationException
+        return self._api
 
     @property
     def data(self):
@@ -87,7 +93,7 @@ class HonCommand:
     async def send(self) -> bool:
         params = self.parameter_groups.get("parameters", {})
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
-        return await self._api.send_command(
+        return await self.api.send_command(
             self._appliance, self._name, params, ancillary_params
         )
 
@@ -129,5 +135,6 @@ class HonCommand:
             for name, parameter in command.parameters.items():
                 if name in result:
                     result[name] = self._more_options(result[name], parameter)
-                result[name] = parameter
+                else:
+                    result[name] = parameter
         return result
