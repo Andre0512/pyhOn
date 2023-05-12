@@ -213,6 +213,7 @@ class HonAppliance:
 
     async def load_statistics(self):
         self._statistics = await self.api.load_statistics(self)
+        self._statistics |= await self.api.load_maintenance(self)
 
     async def update(self):
         now = datetime.now()
@@ -258,20 +259,22 @@ class HonAppliance:
             return self._extra.data(result)
         return result
 
-    def diagnose(self, whitespace="\u200B \u200B ", command_only=False):
+    def diagnose(self, whitespace="  ", command_only=False):
         data = {
             "attributes": self.attributes.copy(),
             "appliance": self.info,
+            "statistics": self.statistics,
             "additional_data": self._additional_data,
         }
         if command_only:
             data.pop("attributes")
             data.pop("appliance")
+            data.pop("statistics")
         data |= {n: c.parameter_groups for n, c in self._commands.items()}
         extra = {n: c.data for n, c in self._commands.items() if c.data}
         if extra:
             data |= {"extra_command_data": extra}
-        for sensible in ["PK", "SK", "serialNumber", "code", "coords"]:
+        for sensible in ["PK", "SK", "serialNumber", "code", "coords", "device"]:
             data.get("appliance", {}).pop(sensible, None)
         result = helper.pretty_print({"data": data}, whitespace=whitespace)
         result += helper.pretty_print(

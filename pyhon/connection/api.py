@@ -140,6 +140,12 @@ class HonAPI:
         async with self._hon.get(url, params=params) as response:
             return (await response.json()).get("payload", {})
 
+    async def load_maintenance(self, appliance: HonAppliance):
+        url = f"{const.API_URL}/commands/v1/maintenance-cycle"
+        params = {"macAddress": appliance.mac_address}
+        async with self._hon.get(url, params=params) as response:
+            return (await response.json()).get("payload", {})
+
     async def send_command(
         self,
         appliance: HonAppliance,
