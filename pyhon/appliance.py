@@ -169,7 +169,7 @@ class HonAppliance:
                     category = category.split(".")[-1].lower()
                 categories[category] = result[0]
         if categories:
-            return [list(categories.values())[0]]
+            return [list(categories.values())[-1]]
         return []
 
     def _get_commands(self, data):

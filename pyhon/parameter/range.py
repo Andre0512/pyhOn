@@ -43,7 +43,7 @@ class HonParameterRange(HonParameter):
     @value.setter
     def value(self, value: float) -> None:
         value = str_to_float(value)
-        if self._min <= value <= self._max and not value % self._step:
+        if self._min <= value <= self._max and not (value - self._min) % self._step:
             self._value = value
         else:
             raise ValueError(

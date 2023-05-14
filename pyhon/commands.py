@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
 
+from pyhon import exceptions
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.fixed import HonParameterFixed
@@ -7,7 +8,7 @@ from pyhon.parameter.program import HonParameterProgram
 from pyhon.parameter.range import HonParameterRange
 
 if TYPE_CHECKING:
-    from pyhon import HonAPI, exceptions
+    from pyhon import HonAPI
     from pyhon.appliance import HonAppliance
 
 
