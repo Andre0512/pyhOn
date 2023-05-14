@@ -100,6 +100,16 @@ class HonAPI:
                 return {}
             return result["payload"]["history"]
 
+    async def command_favourites(self, appliance: HonAppliance) -> Dict:
+        url: str = (
+            f"{const.API_URL}/commands/v1/appliance/{appliance.mac_address}/favourite"
+        )
+        async with self._hon.get(url) as response:
+            result: Dict = await response.json()
+            if not result or not result.get("payload"):
+                return {}
+            return result["payload"]["favourites"]
+
     async def last_activity(self, appliance: HonAppliance) -> Dict:
         url: str = f"{const.API_URL}/commands/v1/retrieve-last-activity"
         params: Dict = {"macAddress": appliance.mac_address}
