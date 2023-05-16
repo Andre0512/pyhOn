@@ -83,6 +83,8 @@ class HonAPI:
             params["firmwareId"] = firmware_id
         if firmware_version := appliance.info.get("fwVersion"):
             params["fwVersion"] = firmware_version
+        if code := appliance.info.get("code"):
+            params["code"] = code
         url: str = f"{const.API_URL}/commands/v1/retrieve"
         async with self._hon.get(url, params=params) as response:
             result: Dict = (await response.json()).get("payload", {})

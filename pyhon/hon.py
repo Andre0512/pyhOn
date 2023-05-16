@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from types import TracebackType
 from typing import List, Optional, Dict, Any, Type
 
@@ -7,6 +8,8 @@ from typing_extensions import Self
 
 from pyhon import HonAPI, exceptions
 from pyhon.appliance import HonAppliance
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Hon:
@@ -70,13 +73,17 @@ class Hon:
         appliance = HonAppliance(self._api, appliance_data, zone=zone)
         if appliance.mac_address == "":
             return
-        await asyncio.gather(
-            *[
-                appliance.load_attributes(),
-                appliance.load_commands(),
-                appliance.load_statistics(),
-            ]
-        )
+        try:
+            await asyncio.gather(
+                *[
+                    appliance.load_attributes(),
+                    appliance.load_commands(),
+                    appliance.load_statistics(),
+                ]
+            )
+        except (KeyError, ValueError, IndexError) as error:
+            _LOGGER.exception(error)
+            _LOGGER.error(f"Device data - %s", appliance_data)
         self._appliances.append(appliance)
 
     async def setup(self) -> None:
