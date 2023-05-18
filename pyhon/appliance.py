@@ -276,7 +276,7 @@ class HonAppliance:
         extra = {n: c.data for n, c in self._commands.items() if c.data}
         if extra:
             data |= {"extra_command_data": extra}
-        for sensible in ["PK", "SK", "serialNumber", "code", "coords", "device"]:
+        for sensible in ["PK", "SK", "serialNumber", "coords", "device"]:
             data.get("appliance", {}).pop(sensible, None)
         result = helper.pretty_print({"data": data}, whitespace=whitespace)
         result += helper.pretty_print(

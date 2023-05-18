@@ -72,7 +72,6 @@ class HonAPI:
     async def load_commands(self, appliance: HonAppliance) -> Dict:
         params: Dict = {
             "applianceType": appliance.appliance_type,
-            "code": appliance.info["code"],
             "applianceModelId": appliance.appliance_model_id,
             "macAddress": appliance.mac_address,
             "os": const.OS,

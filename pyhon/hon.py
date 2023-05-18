@@ -83,7 +83,7 @@ class Hon:
             )
         except (KeyError, ValueError, IndexError) as error:
             _LOGGER.exception(error)
-            _LOGGER.error(f"Device data - %s", appliance_data)
+            _LOGGER.error("Device data - %s", appliance_data)
         self._appliances.append(appliance)
 
     async def setup(self) -> None:
