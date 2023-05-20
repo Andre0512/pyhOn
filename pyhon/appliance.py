@@ -99,6 +99,13 @@ class HonAppliance:
         return self._check_name_zone("nickName")
 
     @property
+    def code(self) -> str:
+        if code := self.info.get("code"):
+            return code
+        serial_number = self.info.get("serialNumber", "")
+        return serial_number[:8] if len(serial_number) < 18 else serial_number[:11]
+
+    @property
     def commands_options(self):
         return self._appliance_model.get("options")
 

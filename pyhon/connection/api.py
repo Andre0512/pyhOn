@@ -76,18 +76,19 @@ class HonAPI:
             "macAddress": appliance.mac_address,
             "os": const.OS,
             "appVersion": const.APP_VERSION,
-            "series": appliance.info["series"],
+            "code": appliance.code,
         }
         if firmware_id := appliance.info.get("eepromId"):
             params["firmwareId"] = firmware_id
         if firmware_version := appliance.info.get("fwVersion"):
             params["fwVersion"] = firmware_version
-        if code := appliance.info.get("code"):
-            params["code"] = code
+        if series := appliance.info.get("series"):
+            params["series"] = series
         url: str = f"{const.API_URL}/commands/v1/retrieve"
         async with self._hon.get(url, params=params) as response:
             result: Dict = (await response.json()).get("payload", {})
             if not result or result.pop("resultCode") != "0":
+                _LOGGER.error(await response.json())
                 return {}
             return result
 
