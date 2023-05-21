@@ -19,6 +19,10 @@ class HonParameterEnum(HonParameter):
     def values(self) -> List[str]:
         return [str(value) for value in self._values]
 
+    @values.setter
+    def values(self, values) -> None:
+        self._values = values
+
     @property
     def value(self) -> str | float:
         return self._value if self._value is not None else self.values[0]
@@ -27,5 +31,6 @@ class HonParameterEnum(HonParameter):
     def value(self, value: str) -> None:
         if value in self.values:
             self._value = value
+            self.check_trigger(value)
         else:
-            raise ValueError(f"Allowed values {self._value}")
+            raise ValueError(f"Allowed values {self._values}")

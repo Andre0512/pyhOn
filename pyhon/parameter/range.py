@@ -45,6 +45,7 @@ class HonParameterRange(HonParameter):
         value = str_to_float(value)
         if self._min <= value <= self._max and not (value - self._min) % self._step:
             self._value = value
+            self.check_trigger(value)
         else:
             raise ValueError(
                 f"Allowed: min {self._min} max {self._max} step {self._step}"

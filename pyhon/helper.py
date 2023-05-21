@@ -47,8 +47,6 @@ def pretty_print(data, key="", intend=0, is_list=False, whitespace="  "):
 def create_command(commands, concat=False):
     result = {}
     for name, command in commands.items():
-        if not concat:
-            result[name] = {}
         for parameter, data in command.available_settings.items():
             if data.typology == "enum":
                 value = data.values
@@ -57,7 +55,21 @@ def create_command(commands, concat=False):
             else:
                 continue
             if not concat:
-                result[name][parameter] = value
+                result.setdefault(name, {})[parameter] = value
+            else:
+                result[f"{name}.{parameter}"] = value
+    return result
+
+
+def create_rules(commands, concat=False):
+    result = {}
+    for name, command in commands.items():
+        for parameter, data in command.available_settings.items():
+            value = data.triggers
+            if not value:
+                continue
+            if not concat:
+                result.setdefault(name, {})[parameter] = value
             else:
                 result[f"{name}.{parameter}"] = value
     return result

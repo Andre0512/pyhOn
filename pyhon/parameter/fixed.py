@@ -19,3 +19,4 @@ class HonParameterFixed(HonParameter):
     def value(self, value: str | float) -> None:
         # Fixed values seems being not so fixed as thought
         self._value = value
+        self.check_trigger(value)

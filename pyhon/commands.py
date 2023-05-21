@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
 
 from pyhon import exceptions
@@ -6,10 +7,13 @@ from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.fixed import HonParameterFixed
 from pyhon.parameter.program import HonParameterProgram
 from pyhon.parameter.range import HonParameterRange
+from pyhon.rules import HonRuleSet
 
 if TYPE_CHECKING:
     from pyhon import HonAPI
     from pyhon.appliance import HonAppliance
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HonCommand:
@@ -31,6 +35,7 @@ class HonCommand:
         self._parameters: Dict[str, HonParameter] = {}
         self._data: Dict[str, Any] = {}
         self._available_settings: Dict[str, HonParameter] = {}
+        self._rules: List[HonRuleSet] = []
         self._load_parameters(attributes)
 
     def __repr__(self) -> str:
@@ -45,6 +50,10 @@ class HonCommand:
         if self._api is None:
             raise exceptions.NoAuthenticationException
         return self._api
+
+    @property
+    def appliance(self) -> "HonAppliance":
+        return self._appliance
 
     @property
     def data(self):
@@ -73,10 +82,17 @@ class HonCommand:
         for key, items in attributes.items():
             for name, data in items.items():
                 self._create_parameters(data, name, key)
+        for rule in self._rules:
+            rule.patch()
 
     def _create_parameters(self, data: Dict, name: str, parameter: str) -> None:
         if name == "zoneMap" and self._appliance.zone:
             data["default"] = self._appliance.zone
+        if data.get("category") == "rule":
+            if "fixedValue" not in data:
+                _LOGGER.error("Rule not supported: %s", data)
+            else:
+                self._rules.append(HonRuleSet(self, data["fixedValue"]))
         match data.get("typology"):
             case "range":
                 self._parameters[name] = HonParameterRange(name, data, parameter)

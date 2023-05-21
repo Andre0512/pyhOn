@@ -171,7 +171,7 @@ class HonAPI:
             "timestamp": f"{now[:-3]}Z",
             "commandName": command,
             "transactionId": f"{appliance.mac_address}_{now[:-3]}Z",
-            "applianceOptions": appliance.commands_options,
+            "applianceOptions": appliance.options,
             "device": self._hon.device.get(mobile=True),
             "attributes": {
                 "channel": "mobileApp",

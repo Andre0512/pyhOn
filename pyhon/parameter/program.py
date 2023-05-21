@@ -35,8 +35,12 @@ class HonParameterProgram(HonParameterEnum):
         values = [v for v in self._programs if all(f not in v for f in self._FILTER)]
         return sorted(values)
 
+    @values.setter
+    def values(self, values) -> None:
+        return
+
     @property
-    def ids(self):
+    def ids(self) -> Dict[int, str]:
         values = {
             int(p.parameters["prCode"].value): n
             for i, (n, p) in enumerate(self._programs.items())

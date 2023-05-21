@@ -106,8 +106,8 @@ class HonAppliance:
         return serial_number[:8] if len(serial_number) < 18 else serial_number[:11]
 
     @property
-    def commands_options(self):
-        return self._appliance_model.get("options")
+    def options(self):
+        return self._appliance_model.get("options", {})
 
     @property
     def commands(self):
@@ -287,7 +287,10 @@ class HonAppliance:
             data.get("appliance", {}).pop(sensible, None)
         result = helper.pretty_print({"data": data}, whitespace=whitespace)
         result += helper.pretty_print(
-            {"commands": helper.create_command(self.commands)},
+            {
+                "commands": helper.create_command(self.commands),
+                "rules": helper.create_rules(self.commands),
+            },
             whitespace=whitespace,
         )
         return result.replace(self.mac_address, "xx-xx-xx-xx-xx-xx")
