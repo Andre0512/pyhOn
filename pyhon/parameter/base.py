@@ -23,6 +23,10 @@ class HonParameter:
         return self._value if self._value is not None else "0"
 
     @property
+    def intern_value(self) -> str | float:
+        return str(self._value) if self._value is not None else ""
+
+    @property
     def values(self) -> List[str]:
         return [str(self.value)]
 
