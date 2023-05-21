@@ -9,7 +9,7 @@ class HonParameterEnum(HonParameter):
         self._default = attributes.get("defaultValue")
         self._value = self._default or "0"
         self._values: List[str] = attributes.get("enumValues", [])
-        if self._default and str(self._default) not in self.values:
+        if self._default and str(self._default.strip("[]")) not in self.values:
             self._values.append(self._default)
 
     def __repr__(self) -> str:

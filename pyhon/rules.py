@@ -26,10 +26,13 @@ class HonRuleSet:
         for entity_key, params in rule.items():
             entity_key = self._command.appliance.options.get(entity_key, entity_key)
             for trigger_key, values in params.items():
+                trigger_key = trigger_key.replace("@", "")
                 trigger_key = self._command.appliance.options.get(
                     trigger_key, trigger_key
                 )
                 for trigger_value, entity_value in values.items():
+                    if entity_value.get("fixedValue") == f"@{entity_key}":
+                        continue
                     self._rules.setdefault(trigger_key, []).append(
                         HonRule(
                             trigger_key,
