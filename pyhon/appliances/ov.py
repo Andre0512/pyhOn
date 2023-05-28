@@ -11,6 +11,10 @@ class Appliance:
 
         data["active"] = data["attributes"]["parameters"]["onOffStatus"] == "1"
 
+        if program := int(data["attributes"]["parameters"]["prCode"]):
+            ids = self.parent.settings["startProgram.program"].ids
+            data["programName"] = ids.get(program, "")
+
         return data
 
     def settings(self, settings):

@@ -26,15 +26,27 @@ class HonParameterRange(HonParameter):
     def min(self) -> float:
         return self._min
 
+    @min.setter
+    def min(self, min: float) -> None:
+        self._min = min
+
     @property
     def max(self) -> float:
         return self._max
+
+    @max.setter
+    def max(self, max: float) -> None:
+        self._max = max
 
     @property
     def step(self) -> float:
         if not self._step:
             return 1
         return self._step
+
+    @step.setter
+    def step(self, step: float) -> None:
+        self._step = step
 
     @property
     def value(self) -> str | float:

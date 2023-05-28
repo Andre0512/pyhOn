@@ -11,6 +11,7 @@ from pyhon import helper
 from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.fixed import HonParameterFixed
+from pyhon.parameter.range import HonParameterRange
 
 if TYPE_CHECKING:
     from pyhon import HonAPI
@@ -302,6 +303,16 @@ class HonAppliance:
                 continue
             for name, parameter in data.parameters.items():
                 if base_value := base.parameters.get(name):
+                    if isinstance(base_value, HonParameterRange) and isinstance(
+                        parameter, HonParameterRange
+                    ):
+                        parameter.max = base_value.max
+                        parameter.min = base_value.min
+                        parameter.step = base_value.step
+                    elif isinstance(parameter, HonParameterRange):
+                        parameter.max = int(base_value.value)
+                        parameter.min = int(base_value.value)
+                        parameter.step = 1
                     parameter.value = base_value.value
 
 
