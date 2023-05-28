@@ -47,3 +47,6 @@ class HonParameterProgram(HonParameterEnum):
             if "iot_" not in n and p.parameters.get("prCode")
         }
         return dict(sorted(values.items()))
+
+    def set_value(self, value: str):
+        self._value = value

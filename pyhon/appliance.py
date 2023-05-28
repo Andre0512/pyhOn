@@ -2,6 +2,7 @@ import importlib
 import json
 import logging
 from contextlib import suppress
+from copy import copy
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -214,7 +215,26 @@ class HonAppliance:
         self._appliance_model = raw.pop("applianceModel")
         raw.pop("dictionaryId", None)
         self._commands = self._get_commands(raw)
+        await self._add_favourites()
         await self._recover_last_command_states()
+
+    async def _add_favourites(self):
+        favourites = await self._api.command_favourites(self)
+        for favourite in favourites:
+            name = favourite.get("favouriteName")
+            command = favourite.get("command")
+            command_name = command.get("commandName")
+            program_name = command.get("programName", "").split(".")[-1].lower()
+            base = copy(self._commands[command_name].categories[program_name])
+            for param, data in command.items():
+                if isinstance(data, str):
+                    continue
+                for key, value in data.items():
+                    if parameter := base.parameters.get(key):
+                        with suppress(ValueError):
+                            parameter.value = value
+            base.parameters["program"].set_value(name)
+            self._commands[command_name].categories[name] = base
 
     async def load_attributes(self):
         self._attributes = await self.api.load_attributes(self)
