@@ -295,6 +295,15 @@ class HonAppliance:
         )
         return result.replace(self.mac_address, "xx-xx-xx-xx-xx-xx")
 
+    def sync_command(self, main, target=None) -> None:
+        base: HonCommand = self.commands.get(main)
+        for command, data in self.commands.items():
+            if command == main or target and command not in target:
+                continue
+            for name, parameter in data.parameters.items():
+                if base_value := base.parameters.get(name):
+                    parameter.value = base_value.value
+
 
 class HonApplianceTest(HonAppliance):
     def __init__(self, name):

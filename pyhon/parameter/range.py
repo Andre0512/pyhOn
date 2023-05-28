@@ -37,11 +37,11 @@ class HonParameterRange(HonParameter):
         return self._step
 
     @property
-    def value(self) -> float:
+    def value(self) -> str | float:
         return self._value if self._value is not None else self._min
 
     @value.setter
-    def value(self, value: float) -> None:
+    def value(self, value: str | float) -> None:
         value = str_to_float(value)
         if self._min <= value <= self._max and not (value - self._min) % self._step:
             self._value = value

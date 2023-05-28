@@ -48,7 +48,7 @@ class HonCommand:
     @property
     def api(self) -> "HonAPI":
         if self._api is None:
-            raise exceptions.NoAuthenticationException
+            raise exceptions.NoAuthenticationException("Missing hOn login")
         return self._api
 
     @property

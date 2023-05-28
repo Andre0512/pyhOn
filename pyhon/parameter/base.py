@@ -22,6 +22,11 @@ class HonParameter:
     def value(self) -> str | float:
         return self._value if self._value is not None else "0"
 
+    @value.setter
+    def value(self, value: str | float) -> None:
+        self._value = value
+        self.check_trigger(value)
+
     @property
     def intern_value(self) -> str | float:
         return str(self._value) if self._value is not None else ""
