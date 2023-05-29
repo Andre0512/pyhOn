@@ -44,7 +44,9 @@ class HonParameterProgram(HonParameterEnum):
         values = {
             int(p.parameters["prCode"].value): n
             for i, (n, p) in enumerate(self._programs.items())
-            if "iot_" not in n and p.parameters.get("prCode")
+            if "iot_" not in n
+            and p.parameters.get("prCode")
+            and not ((fav := p.parameters.get("favourite")) and fav.value == "1")
         }
         return dict(sorted(values.items()))
 

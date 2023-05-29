@@ -1,11 +1,9 @@
-from pyhon.parameter.fixed import HonParameterFixed
+from pyhon.appliances.base import ApplianceBase
 
 
-class Appliance:
-    def __init__(self, appliance):
-        self.parent = appliance
-
+class Appliance(ApplianceBase):
     def data(self, data):
+        super().data(data)
         if data["attributes"]["parameters"]["holidayMode"] == "1":
             data["modeZ1"] = "holiday"
         elif data["attributes"]["parameters"]["intelligenceMode"] == "1":
@@ -23,6 +21,3 @@ class Appliance:
             data["modeZ2"] = "no_mode"
 
         return data
-
-    def settings(self, settings):
-        return settings

@@ -226,13 +226,15 @@ class HonAppliance:
             command_name = command.get("commandName")
             program_name = command.get("programName", "").split(".")[-1].lower()
             base = copy(self._commands[command_name].categories[program_name])
-            for param, data in command.items():
+            for data in command.values():
                 if isinstance(data, str):
                     continue
                 for key, value in data.items():
                     if parameter := base.parameters.get(key):
                         with suppress(ValueError):
                             parameter.value = value
+            extra_param = HonParameterFixed("favourite", {"fixedValue": "1"}, "custom")
+            base.parameters.update(favourite=extra_param)
             base.parameters["program"].set_value(name)
             self._commands[command_name].categories[name] = base
 
@@ -296,6 +298,8 @@ class HonAppliance:
             "statistics": self.statistics,
             "additional_data": self._additional_data,
         }
+        if self._extra and data.get("attributes"):
+            data = self._extra.data(data)
         if command_only:
             data.pop("attributes")
             data.pop("appliance")

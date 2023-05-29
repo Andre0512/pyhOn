@@ -1,8 +1,9 @@
-class Appliance:
-    def __init__(self, appliance):
-        self.parent = appliance
+from pyhon.appliances.base import ApplianceBase
 
+
+class Appliance(ApplianceBase):
     def data(self, data):
+        super().data(data)
         if data["attributes"]["lastConnEvent"]["category"] == "DISCONNECTED":
             data["attributes"]["parameters"]["temp"] = "0"
             data["attributes"]["parameters"]["onOffStatus"] = "0"
@@ -16,6 +17,3 @@ class Appliance:
             data["programName"] = ids.get(program, "")
 
         return data
-
-    def settings(self, settings):
-        return settings
