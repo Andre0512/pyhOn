@@ -16,27 +16,27 @@ class HonParameterRange(HonParameter):
         self._min: float = str_to_float(attributes["minimumValue"])
         self._max: float = str_to_float(attributes["maximumValue"])
         self._step: float = str_to_float(attributes["incrementValue"])
-        self._default: float = str_to_float(attributes.get("defaultValue", self._min))
+        self._default: float = str_to_float(attributes.get("defaultValue", self.min))
         self._value: float = self._default
 
     def __repr__(self):
-        return f"{self.__class__} (<{self.key}> [{self._min} - {self._max}])"
+        return f"{self.__class__} (<{self.key}> [{self.min} - {self.max}])"
 
     @property
     def min(self) -> float:
         return self._min
 
     @min.setter
-    def min(self, min: float) -> None:
-        self._min = min
+    def min(self, mini: float) -> None:
+        self._min = mini
 
     @property
     def max(self) -> float:
         return self._max
 
     @max.setter
-    def max(self, max: float) -> None:
-        self._max = max
+    def max(self, maxi: float) -> None:
+        self._max = maxi
 
     @property
     def step(self) -> float:
@@ -50,18 +50,16 @@ class HonParameterRange(HonParameter):
 
     @property
     def value(self) -> str | float:
-        return self._value if self._value is not None else self._min
+        return self._value if self._value is not None else self.min
 
     @value.setter
     def value(self, value: str | float) -> None:
         value = str_to_float(value)
-        if self._min <= value <= self._max and not (value - self._min) % self._step:
+        if self.min <= value <= self.max and not (value - self.min) % self.step:
             self._value = value
             self.check_trigger(value)
         else:
-            raise ValueError(
-                f"Allowed: min {self._min} max {self._max} step {self._step}"
-            )
+            raise ValueError(f"Allowed: min {self.min} max {self.max} step {self.step}")
 
     @property
     def values(self) -> List[str]:
