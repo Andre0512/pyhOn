@@ -134,9 +134,7 @@ class HonAuth:
                 fw_uid, loaded_str = context[0]
                 self._login_data.fw_uid = fw_uid
                 self._login_data.loaded = json.loads(loaded_str)
-                self._login_data.url = login_url.replace(
-                    "/".join(const.AUTH_API.split("/")[:-1]), ""
-                )
+                self._login_data.url = login_url.replace(const.AUTH_API, "")
                 return True
             await self._error_logger(response)
         return False
@@ -149,8 +147,8 @@ class HonAuth:
             "descriptor": "apex://LightningLoginCustomController/ACTION$login",
             "callingDescriptor": "markup://c:loginForm",
             "params": {
-                "username": quote(self._login_data.email),
-                "password": quote(self._login_data.password),
+                "username": self._login_data.email,
+                "password": self._login_data.password,
                 "startUrl": start_url,
             },
         }
@@ -172,7 +170,7 @@ class HonAuth:
         async with self._request.post(
             const.AUTH_API + "/s/sfsites/aura",
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data="&".join(f"{k}={json.dumps(v)}" for k, v in data.items()),
+            data="&".join(f"{k}={quote(json.dumps(v))}" for k, v in data.items()),
             params=params,
         ) as response:
             if response.status == 200:
@@ -210,7 +208,7 @@ class HonAuth:
                 url_search = re.findall(
                     "href\\s*=\\s*[\"'](.*?)[\"']", await response.text()
                 )
-        url = "/".join(const.AUTH_API.split("/")[:-1]) + url_search[0]
+        url = const.AUTH_API + url_search[0]
         async with self._request.get(url) as response:
             if response.status != 200:
                 await self._error_logger(response)

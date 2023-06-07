@@ -1,4 +1,4 @@
-AUTH_API = "https://he-accounts.force.com/SmartHome"
+AUTH_API = "https://account2.hon-smarthome.com"
 API_URL = "https://api-iot.he.services"
 API_KEY = "GRCqFhC6Gk@ikWXm1RmnSmX1cm,MxY-configuration"
 APP = "hon"
