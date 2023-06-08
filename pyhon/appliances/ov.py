@@ -2,17 +2,17 @@ from pyhon.appliances.base import ApplianceBase
 
 
 class Appliance(ApplianceBase):
-    def data(self, data):
-        super().data(data)
-        if data["attributes"]["lastConnEvent"]["category"] == "DISCONNECTED":
-            data["attributes"]["parameters"]["temp"] = "0"
-            data["attributes"]["parameters"]["onOffStatus"] = "0"
-            data["attributes"]["parameters"]["remoteCtrValid"] = "0"
-            data["attributes"]["parameters"]["remainingTimeMM"] = "0"
+    def attributes(self, data):
+        data = super().attributes(data)
+        if data["lastConnEvent"]["category"] == "DISCONNECTED":
+            data["parameters"]["temp"] = "0"
+            data["parameters"]["onOffStatus"] = "0"
+            data["parameters"]["remoteCtrValid"] = "0"
+            data["parameters"]["remainingTimeMM"] = "0"
 
-        data["active"] = data["attributes"]["parameters"]["onOffStatus"] == "1"
+        data["active"] = data["parameters"]["onOffStatus"] == "1"
 
-        if program := int(data["attributes"]["parameters"]["prCode"]):
+        if program := int(data["parameters"]["prCode"]):
             ids = self.parent.settings["startProgram.program"].ids
             data["programName"] = ids.get(program, "")
 

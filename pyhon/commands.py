@@ -110,6 +110,7 @@ class HonCommand:
     async def send(self) -> bool:
         params = self.parameter_groups.get("parameters", {})
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
+        self.appliance.sync_to_params(self.name)
         return await self.api.send_command(
             self._appliance, self._name, params, ancillary_params
         )

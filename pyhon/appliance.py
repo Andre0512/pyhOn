@@ -242,15 +242,20 @@ class HonAppliance:
         self._attributes = await self.api.load_attributes(self)
         for name, values in self._attributes.pop("shadow").get("parameters").items():
             self._attributes.setdefault("parameters", {})[name] = values["parNewVal"]
+        if self._extra:
+            self._attributes = self._extra.attributes(self._attributes)
 
     async def load_statistics(self):
         self._statistics = await self.api.load_statistics(self)
         self._statistics |= await self.api.load_maintenance(self)
 
-    async def update(self):
+    async def update(self, force=False):
         now = datetime.now()
-        if not self._last_update or self._last_update < now - timedelta(
-            seconds=self._MINIMAL_UPDATE_INTERVAL
+        if (
+            force
+            or not self._last_update
+            or self._last_update
+            < now - timedelta(seconds=self._MINIMAL_UPDATE_INTERVAL)
         ):
             self._last_update = now
             await self.load_attributes()
@@ -286,9 +291,8 @@ class HonAppliance:
             "statistics": self.statistics,
             "additional_data": self._additional_data,
             **self.command_parameters,
+            **self.attributes,
         }
-        if self._extra:
-            return self._extra.data(result)
         return result
 
     def diagnose(self, whitespace="  ", command_only=False):
@@ -320,6 +324,12 @@ class HonAppliance:
         )
         return result.replace(self.mac_address, "xx-xx-xx-xx-xx-xx")
 
+    def sync_to_params(self, command_name):
+        command: HonCommand = self.commands.get(command_name)
+        for key, value in self.attributes.get("parameters", {}).items():
+            if isinstance(value, str) and (new := command.parameters.get(key)):
+                self.attributes["parameters"][key] = str(new.intern_value)
+
     def sync_command(self, main, target=None) -> None:
         base: HonCommand = self.commands.get(main)
         for command, data in self.commands.items():
@@ -345,6 +355,7 @@ class HonApplianceTest(HonAppliance):
         super().__init__(None, {})
         self._name = name
         self.load_commands()
+        self.load_attributes()
         self._info = self._appliance_model
 
     def load_commands(self):
