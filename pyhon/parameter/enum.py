@@ -28,6 +28,10 @@ class HonParameterEnum(HonParameter):
         self._values = values
 
     @property
+    def intern_value(self) -> str:
+        return str(self._value) if self._value is not None else str(self.values[0])
+
+    @property
     def value(self) -> str | float:
         return clean_value(self._value) if self._value is not None else self.values[0]
 

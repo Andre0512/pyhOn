@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime
+from pprint import pformat
 from typing import Dict, Optional
 
 from aiohttp import ClientSession
@@ -188,6 +189,7 @@ class HonAPI:
             if json_data.get("payload", {}).get("resultCode") == "0":
                 return True
             _LOGGER.error(await response.text())
+            _LOGGER.error("%s - Payload:\n%s", url, pformat(data))
         return False
 
     async def appliance_configuration(self) -> Dict:

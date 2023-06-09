@@ -302,8 +302,6 @@ class HonAppliance:
             "statistics": self.statistics,
             "additional_data": self._additional_data,
         }
-        if self._extra and data.get("attributes"):
-            data = self._extra.data(data)
         if command_only:
             data.pop("attributes")
             data.pop("appliance")

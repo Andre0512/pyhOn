@@ -28,8 +28,8 @@ class HonParameter:
         self.check_trigger(value)
 
     @property
-    def intern_value(self) -> str | float:
-        return str(self._value) if self._value is not None else ""
+    def intern_value(self) -> str:
+        return str(self.value)
 
     @property
     def values(self) -> List[str]:

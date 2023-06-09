@@ -2,6 +2,7 @@ import logging
 from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
 
 from pyhon import exceptions
+from pyhon.exceptions import ApiError
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.fixed import HonParameterFixed
@@ -111,9 +112,12 @@ class HonCommand:
         params = self.parameter_groups.get("parameters", {})
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         self.appliance.sync_to_params(self.name)
-        return await self.api.send_command(
+        result = await self.api.send_command(
             self._appliance, self._name, params, ancillary_params
         )
+        if not result:
+            raise ApiError("Can't send command")
+        return result
 
     @property
     def categories(self) -> Dict[str, "HonCommand"]:

@@ -12,3 +12,7 @@ class NoSessionException(Exception):
 
 class NoAuthenticationException(Exception):
     pass
+
+
+class ApiError(Exception):
+    pass
