@@ -66,5 +66,18 @@ class HonParameter:
     def triggers(self):
         result = {}
         for value, rules in self._triggers.items():
-            result[value] = {rule.param_key: rule.param_value for _, rule in rules}
+            for _, rule in rules:
+                if rule.extras:
+                    param = result.setdefault(value, {})
+                    for extra_key, extra_value in rule.extras.items():
+                        param = param.setdefault(extra_key, {}).setdefault(
+                            extra_value, {}
+                        )
+                else:
+                    param = result.setdefault(value, {})
+                if fixed_value := rule.param_data.get("fixedValue"):
+                    param[rule.param_key] = fixed_value
+                else:
+                    param[rule.param_key] = rule.param_data.get("defaultValue", "")
+
         return result
