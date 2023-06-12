@@ -9,6 +9,7 @@ from typing import Optional, Dict, Any
 from typing import TYPE_CHECKING
 
 from pyhon import helper
+from pyhon.attributes import HonAttribute
 from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.fixed import HonParameterFixed
@@ -61,7 +62,7 @@ class HonAppliance:
         if item in self.data:
             return self.data[item]
         if item in self.attributes["parameters"]:
-            return self.attributes["parameters"].get(item)
+            return self.attributes["parameters"][item].value
         return self.info[item]
 
     def get(self, item, default=None):
@@ -241,7 +242,10 @@ class HonAppliance:
     async def load_attributes(self):
         self._attributes = await self.api.load_attributes(self)
         for name, values in self._attributes.pop("shadow").get("parameters").items():
-            self._attributes.setdefault("parameters", {})[name] = values["parNewVal"]
+            if name in self._attributes.get("parameters", {}):
+                self._attributes["parameters"][name].update(values)
+            else:
+                self._attributes.setdefault("parameters", {})[name] = HonAttribute(values)
         if self._extra:
             self._attributes = self._extra.attributes(self._attributes)
 
@@ -326,7 +330,7 @@ class HonAppliance:
         command: HonCommand = self.commands.get(command_name)
         for key, value in self.attributes.get("parameters", {}).items():
             if isinstance(value, str) and (new := command.parameters.get(key)):
-                self.attributes["parameters"][key] = str(new.intern_value)
+                self.attributes["parameters"][key].value = str(new.intern_value)
 
     def sync_command(self, main, target=None) -> None:
         base: HonCommand = self.commands.get(main)

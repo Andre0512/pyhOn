@@ -5,10 +5,10 @@ class Appliance(ApplianceBase):
     def attributes(self, data):
         data = super().attributes(data)
         if data["lastConnEvent"]["category"] == "DISCONNECTED":
-            data["parameters"]["temp"] = "0"
-            data["parameters"]["onOffStatus"] = "0"
-            data["parameters"]["remoteCtrValid"] = "0"
-            data["parameters"]["remainingTimeMM"] = "0"
+            data["parameters"]["temp"].value = "0"
+            data["parameters"]["onOffStatus"].value = "0"
+            data["parameters"]["remoteCtrValid"].value = "0"
+            data["parameters"]["remainingTimeMM"].value = "0"
 
         data["active"] = data["parameters"]["onOffStatus"] == "1"
 
