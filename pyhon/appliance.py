@@ -330,7 +330,7 @@ class HonAppliance:
         command: HonCommand = self.commands.get(command_name)
         for key, value in self.attributes.get("parameters", {}).items():
             if isinstance(value, str) and (new := command.parameters.get(key)):
-                self.attributes["parameters"][key].value = str(new.intern_value)
+                self.attributes["parameters"][key].update(str(new.intern_value), shield=True)
 
     def sync_command(self, main, target=None) -> None:
         base: HonCommand = self.commands.get(main)
