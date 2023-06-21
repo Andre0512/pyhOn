@@ -4,7 +4,7 @@ from pyhon.appliances.base import ApplianceBase
 class Appliance(ApplianceBase):
     def attributes(self, data):
         data = super().attributes(data)
-        if data["lastConnEvent"]["category"] == "DISCONNECTED":
+        if data.get("lastConnEvent", {}).get("category", "") == "DISCONNECTED":
             data["parameters"]["temp"] = "0"
             data["parameters"]["onOffStatus"] = "0"
             data["parameters"]["remoteCtrValid"] = "0"
