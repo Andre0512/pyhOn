@@ -32,7 +32,7 @@ class HonAppliance:
         self._api: Optional[HonAPI] = api
         self._appliance_model: Dict = {}
 
-        self._commands: Dict = {}
+        self._commands: Dict[str, HonCommand] = {}
         self._statistics: Dict = {}
         self._attributes: Dict = {}
         self._zone: int = zone
@@ -112,7 +112,7 @@ class HonAppliance:
         return self._appliance_model.get("options", {})
 
     @property
-    def commands(self):
+    def commands(self) -> Dict[str, HonCommand]:
         return self._commands
 
     @property
@@ -329,7 +329,9 @@ class HonAppliance:
                 self.attributes["parameters"][key] = str(new.intern_value)
 
     def sync_command(self, main, target=None) -> None:
-        base: HonCommand = self.commands.get(main)
+        base: Optional[HonCommand] = self.commands.get(main)
+        if not base:
+            return
         for command, data in self.commands.items():
             if command == main or target and command not in target:
                 continue

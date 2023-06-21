@@ -2,7 +2,7 @@ import logging
 from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
 
 from pyhon import exceptions
-from pyhon.exceptions import ApiError
+from pyhon.exceptions import ApiError, NoAuthenticationException
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.fixed import HonParameterFixed
@@ -113,11 +113,16 @@ class HonCommand:
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         ancillary_params.pop("programRules", None)
         self.appliance.sync_to_params(self.name)
-        result = await self.api.send_command(
-            self._appliance, self._name, params, ancillary_params
-        )
-        if not result:
-            raise ApiError("Can't send command")
+        try:
+            result = await self.api.send_command(
+                self._appliance, self._name, params, ancillary_params
+            )
+            if not result:
+                _LOGGER.error(result)
+                raise ApiError("Can't send command")
+        except NoAuthenticationException:
+            _LOGGER.error("No Authentication")
+            return False
         return result
 
     @property
