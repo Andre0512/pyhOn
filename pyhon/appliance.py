@@ -1,17 +1,15 @@
 import importlib
 import json
 import logging
-from contextlib import suppress
-from copy import copy
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any
-from typing import TYPE_CHECKING
+from typing import Optional, Dict, Any, TYPE_CHECKING
 
 from pyhon import helper
+from pyhon.attributes import HonAttribute
+from pyhon.command_loader import HonCommandLoader
 from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
-from pyhon.parameter.fixed import HonParameterFixed
 from pyhon.parameter.range import HonParameterRange
 
 if TYPE_CHECKING:
@@ -61,7 +59,7 @@ class HonAppliance:
         if item in self.data:
             return self.data[item]
         if item in self.attributes["parameters"]:
-            return self.attributes["parameters"].get(item)
+            return self.attributes["parameters"][item].value
         return self.info[item]
 
     def get(self, item, default=None):
@@ -139,109 +137,22 @@ class HonAppliance:
     def api(self) -> Optional["HonAPI"]:
         return self._api
 
-    async def _recover_last_command_states(self):
-        command_history = await self.api.command_history(self)
-        for name, command in self._commands.items():
-            last = next(
-                (
-                    index
-                    for (index, d) in enumerate(command_history)
-                    if d.get("command", {}).get("commandName") == name
-                ),
-                None,
-            )
-            if last is None:
-                continue
-            parameters = command_history[last].get("command", {}).get("parameters", {})
-            if command.categories and (
-                parameters.get("program") or parameters.get("category")
-            ):
-                if parameters.get("program"):
-                    command.category = parameters.pop("program").split(".")[-1].lower()
-                else:
-                    command.category = parameters.pop("category")
-                command = self.commands[name]
-            for key, data in command.settings.items():
-                if (
-                    not isinstance(data, HonParameterFixed)
-                    and parameters.get(key) is not None
-                ):
-                    with suppress(ValueError):
-                        data.value = parameters.get(key)
-
-    def _get_categories(self, command, data):
-        categories = {}
-        for category, value in data.items():
-            result = self._get_command(value, command, category, categories)
-            if result:
-                if "PROGRAM" in category:
-                    category = category.split(".")[-1].lower()
-                categories[category] = result[0]
-        if categories:
-            if "setParameters" in categories:
-                return [categories["setParameters"]]
-            return [list(categories.values())[0]]
-        return []
-
-    def _get_commands(self, data):
-        commands = []
-        for command, value in data.items():
-            commands += self._get_command(value, command, "")
-        return {c.name: c for c in commands}
-
-    def _get_command(self, data, command="", category="", categories=None):
-        commands = []
-        if isinstance(data, dict):
-            if data.get("description") and data.get("protocolType", None):
-                commands += [
-                    HonCommand(
-                        command,
-                        data,
-                        self,
-                        category_name=category,
-                        categories=categories,
-                    )
-                ]
-            else:
-                commands += self._get_categories(command, data)
-        elif category:
-            self._additional_data.setdefault(command, {})[category] = data
-        else:
-            self._additional_data[command] = data
-        return commands
-
-    async def load_commands(self):
-        raw = await self.api.load_commands(self)
-        self._appliance_model = raw.pop("applianceModel")
-        raw.pop("dictionaryId", None)
-        self._commands = self._get_commands(raw)
-        await self._add_favourites()
-        await self._recover_last_command_states()
-
-    async def _add_favourites(self):
-        favourites = await self._api.command_favourites(self)
-        for favourite in favourites:
-            name = favourite.get("favouriteName")
-            command = favourite.get("command")
-            command_name = command.get("commandName")
-            program_name = command.get("programName", "").split(".")[-1].lower()
-            base = copy(self._commands[command_name].categories[program_name])
-            for data in command.values():
-                if isinstance(data, str):
-                    continue
-                for key, value in data.items():
-                    if parameter := base.parameters.get(key):
-                        with suppress(ValueError):
-                            parameter.value = value
-            extra_param = HonParameterFixed("favourite", {"fixedValue": "1"}, "custom")
-            base.parameters.update(favourite=extra_param)
-            base.parameters["program"].set_value(name)
-            self._commands[command_name].categories[name] = base
+    async def load_commands(self, data=None):
+        command_loader = HonCommandLoader(self.api, self)
+        await command_loader.load_commands(data)
+        self._commands = command_loader.commands
+        self._additional_data = command_loader.additional_data
+        self._appliance_model = command_loader.appliance_data
 
     async def load_attributes(self):
         self._attributes = await self.api.load_attributes(self)
         for name, values in self._attributes.pop("shadow").get("parameters").items():
-            self._attributes.setdefault("parameters", {})[name] = values["parNewVal"]
+            if name in self._attributes.get("parameters", {}):
+                self._attributes["parameters"][name].update(values)
+            else:
+                self._attributes.setdefault("parameters", {})[name] = HonAttribute(
+                    values
+                )
         if self._extra:
             self._attributes = self._extra.attributes(self._attributes)
 
@@ -326,7 +237,9 @@ class HonAppliance:
         command: HonCommand = self.commands.get(command_name)
         for key, value in self.attributes.get("parameters", {}).items():
             if isinstance(value, str) and (new := command.parameters.get(key)):
-                self.attributes["parameters"][key] = str(new.intern_value)
+                self.attributes["parameters"][key].update(
+                    str(new.intern_value), shield=True
+                )
 
     def sync_command(self, main, target=None) -> None:
         base: Optional[HonCommand] = self.commands.get(main)

@@ -1,13 +1,7 @@
 from typing import Dict, Any, List
 
+from pyhon.helper import str_to_float
 from pyhon.parameter.base import HonParameter
-
-
-def str_to_float(string: str | float) -> float:
-    try:
-        return int(string)
-    except ValueError:
-        return float(str(string).replace(",", "."))
 
 
 class HonParameterRange(HonParameter):
