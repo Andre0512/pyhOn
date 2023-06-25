@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 from types import TracebackType
 from typing import List, Optional, Dict, Any, Type
 
@@ -8,6 +9,7 @@ from typing_extensions import Self
 
 from pyhon import HonAPI, exceptions
 from pyhon.appliance import HonAppliance
+from pyhon.connection.api import TestAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,12 +20,14 @@ class Hon:
         email: Optional[str] = "",
         password: Optional[str] = "",
         session: Optional[ClientSession] = None,
+        test_data_path: Optional[Path] = None,
     ):
         self._email: Optional[str] = email
         self._password: Optional[str] = password
         self._session: ClientSession | None = session
         self._appliances: List[HonAppliance] = []
         self._api: Optional[HonAPI] = None
+        self._test_data_path: Path = test_data_path or Path().cwd()
 
     async def __aenter__(self) -> Self:
         return await self.create()
@@ -69,8 +73,10 @@ class Hon:
     def appliances(self, appliances) -> None:
         self._appliances = appliances
 
-    async def _create_appliance(self, appliance_data: Dict[str, Any], zone=0) -> None:
-        appliance = HonAppliance(self._api, appliance_data, zone=zone)
+    async def _create_appliance(
+        self, appliance_data: Dict[str, Any], api: HonAPI, zone=0
+    ) -> None:
+        appliance = HonAppliance(api, appliance_data, zone=zone)
         if appliance.mac_address == "":
             return
         try:
@@ -87,12 +93,20 @@ class Hon:
         self._appliances.append(appliance)
 
     async def setup(self) -> None:
-        appliance: Dict
-        for appliance in (await self.api.load_appliances())["payload"]["appliances"]:
+        appliances = await self.api.load_appliances()
+        for appliance in appliances:
             if (zones := int(appliance.get("zone", "0"))) > 1:
                 for zone in range(zones):
-                    await self._create_appliance(appliance.copy(), zone=zone + 1)
-            await self._create_appliance(appliance)
+                    await self._create_appliance(
+                        appliance.copy(), self.api, zone=zone + 1
+                    )
+            await self._create_appliance(appliance, self.api)
+        if (
+            test_data := self._test_data_path / "hon-test-data" / "test_data"
+        ).exists() or (test_data := test_data / "test_data").exists():
+            api = TestAPI(test_data)
+            for appliance in await api.load_appliances():
+                await self._create_appliance(appliance, api)
 
     async def close(self) -> None:
         await self.api.close()

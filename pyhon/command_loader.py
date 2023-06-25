@@ -1,5 +1,4 @@
 import asyncio
-import json
 from contextlib import suppress
 from copy import copy
 from typing import Dict, Any, Optional, TYPE_CHECKING, List
@@ -53,12 +52,9 @@ class HonCommandLoader:
         """Get command additional data"""
         return self._additional_data
 
-    async def load_commands(self, data=None):
+    async def load_commands(self):
         """Trigger loading of command data"""
-        if data:
-            self._api_commands = data
-        else:
-            await self._load_data()
+        await self._load_data()
         self._appliance_data = self._api_commands.pop("applianceModel")
         self._get_commands()
         self._add_favourites()
@@ -68,10 +64,10 @@ class HonCommandLoader:
         self._api_commands = await self._api.load_commands(self._appliance)
 
     async def _load_favourites(self):
-        self._favourites = await self._api.command_favourites(self._appliance)
+        self._favourites = await self._api.load_favourites(self._appliance)
 
     async def _load_command_history(self):
-        self._command_history = await self._api.command_history(self._appliance)
+        self._command_history = await self._api.load_command_history(self._appliance)
 
     async def _load_data(self):
         """Request parallel all relevant data"""

@@ -1,11 +1,10 @@
 import importlib
-import json
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Dict, Any, TYPE_CHECKING
 
-from pyhon import helper
+from pyhon import diagnose
 from pyhon.attributes import HonAttribute
 from pyhon.command_loader import HonCommandLoader
 from pyhon.commands import HonCommand
@@ -95,6 +94,10 @@ class HonAppliance:
         return self._check_name_zone("modelName")
 
     @property
+    def brand(self) -> str:
+        return self._check_name_zone("brand")
+
+    @property
     def nick_name(self) -> str:
         return self._check_name_zone("nickName")
 
@@ -104,6 +107,10 @@ class HonAppliance:
             return code
         serial_number = self.info.get("serialNumber", "")
         return serial_number[:8] if len(serial_number) < 18 else serial_number[:11]
+
+    @property
+    def model_id(self) -> int:
+        return self._info.get("applianceModelId", 0)
 
     @property
     def options(self):
@@ -137,9 +144,9 @@ class HonAppliance:
     def api(self) -> Optional["HonAPI"]:
         return self._api
 
-    async def load_commands(self, data=None):
+    async def load_commands(self):
         command_loader = HonCommandLoader(self.api, self)
-        await command_loader.load_commands(data)
+        await command_loader.load_commands()
         self._commands = command_loader.commands
         self._additional_data = command_loader.additional_data
         self._appliance_model = command_loader.appliance_data
@@ -206,32 +213,12 @@ class HonAppliance:
         }
         return result
 
-    def diagnose(self, whitespace="  ", command_only=False):
-        data = {
-            "attributes": self.attributes.copy(),
-            "appliance": self.info,
-            "statistics": self.statistics,
-            "additional_data": self._additional_data,
-        }
-        if command_only:
-            data.pop("attributes")
-            data.pop("appliance")
-            data.pop("statistics")
-        data |= {n: c.parameter_groups for n, c in self._commands.items()}
-        extra = {n: c.data for n, c in self._commands.items() if c.data}
-        if extra:
-            data |= {"extra_command_data": extra}
-        for sensible in ["PK", "SK", "serialNumber", "coords", "device"]:
-            data.get("appliance", {}).pop(sensible, None)
-        result = helper.pretty_print({"data": data}, whitespace=whitespace)
-        result += helper.pretty_print(
-            {
-                "commands": helper.create_command(self.commands),
-                "rules": helper.create_rules(self.commands),
-            },
-            whitespace=whitespace,
-        )
-        return result.replace(self.mac_address, "xx-xx-xx-xx-xx-xx")
+    @property
+    def diagnose(self) -> str:
+        return diagnose.yaml_export(self, anonymous=True)
+
+    async def data_archive(self, path: Path) -> str:
+        return await diagnose.zip_archive(self, path, anonymous=True)
 
     def sync_to_params(self, command_name):
         command: HonCommand = self.commands.get(command_name)
@@ -261,35 +248,3 @@ class HonAppliance:
                         parameter.min = int(base_value.value)
                         parameter.step = 1
                     parameter.value = base_value.value
-
-
-class HonApplianceTest(HonAppliance):
-    def __init__(self, name):
-        super().__init__(None, {})
-        self._name = name
-        self.load_commands()
-        self.load_attributes()
-        self._info = self._appliance_model
-
-    def load_commands(self):
-        device = Path(__file__).parent / "test_data" / f"{self._name}.json"
-        with open(str(device)) as f:
-            raw = json.loads(f.read())
-        self._appliance_model = raw.pop("applianceModel")
-        raw.pop("dictionaryId", None)
-        self._commands = self._get_commands(raw)
-
-    async def update(self):
-        return
-
-    @property
-    def nick_name(self) -> str:
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        return self._name
-
-    @property
-    def mac_address(self) -> str:
-        return "xx-xx-xx-xx-xx-xx"

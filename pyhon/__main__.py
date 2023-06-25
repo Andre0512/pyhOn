@@ -10,7 +10,7 @@ from pathlib import Path
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pyhon import Hon, HonAPI, helper
+from pyhon import Hon, HonAPI, helper, diagnose
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +24,11 @@ def get_arguments():
     keys = subparser.add_parser("keys", help="print as key format")
     keys.add_argument("keys", help="print as key format", action="store_true")
     keys.add_argument("--all", help="print also full keys", action="store_true")
+    export = subparser.add_parser("export")
+    export.add_argument("export", help="export pyhon data", action="store_true")
+    export.add_argument("--zip", help="create zip archive", action="store_true")
+    export.add_argument("--anonymous", help="anonymize data", action="store_true")
+    export.add_argument("directory", nargs="?", default=Path().cwd())
     translate = subparser.add_parser(
         "translate", help="print available translation keys"
     )
@@ -50,17 +55,31 @@ async def translate(language, json_output=False):
         print(helper.pretty_print(keys))
 
 
+def get_login_data(args):
+    if not (user := args["user"]):
+        user = input("User for hOn account: ")
+    if not (password := args["password"]):
+        password = getpass("Password for hOn account: ")
+    return user, password
+
+
 async def main():
     args = get_arguments()
     if language := args.get("translate"):
         await translate(language, json_output=args.get("json"))
         return
-    if not (user := args["user"]):
-        user = input("User for hOn account: ")
-    if not (password := args["password"]):
-        password = getpass("Password for hOn account: ")
-    async with Hon(user, password) as hon:
+    async with Hon(*get_login_data(args)) as hon:
         for device in hon.appliances:
+            if args.get("export"):
+                anonymous = args.get("anonymous", False)
+                path = Path(args.get("directory"))
+                if not args.get("zip"):
+                    for file in await diagnose.appliance_data(device, path, anonymous):
+                        print(f"Created {file}")
+                else:
+                    file = await diagnose.zip_archive(device, path, anonymous)
+                    print(f"Created {file}")
+                continue
             print("=" * 10, device.appliance_type, "-", device.nick_name, "=" * 10)
             if args.get("keys"):
                 data = device.data.copy()
@@ -78,7 +97,7 @@ async def main():
                     )
                 )
             else:
-                print(device.diagnose("  "))
+                print(diagnose.yaml_export(device))
 
 
 def start():
