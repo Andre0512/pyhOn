@@ -67,9 +67,10 @@ async def appliance_data(
 
 async def zip_archive(appliance: "HonAppliance", path: Path, anonymous: bool = False):
     data = await appliance_data(appliance, path, anonymous)
-    shutil.make_archive(str(path), "zip", path)
-    shutil.rmtree(path)
-    return f"{data[0].parent.stem}.zip"
+    archive = data[0].parent
+    shutil.make_archive(str(archive), "zip", path)
+    shutil.rmtree(archive)
+    return f"{archive.stem}.zip"
 
 
 def yaml_export(appliance: "HonAppliance", anonymous=False) -> str:
