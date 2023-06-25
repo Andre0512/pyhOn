@@ -107,3 +107,6 @@ This library is used for the custom [HomeAssistant Integration "Haier hOn"](http
 ## Contribution
 Any kind of contribution is welcome!
 
+| Please add your appliances data to our [hon-test-data collection](https://github.com/Andre0512/hon-test-data). <br/>This helps us to develop new features and not to break compatibility in newer versions. |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
