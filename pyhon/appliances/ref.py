@@ -1,8 +1,10 @@
+from typing import Dict, Any
+
 from pyhon.appliances.base import ApplianceBase
 
 
 class Appliance(ApplianceBase):
-    def attributes(self, data):
+    def attributes(self, data: Dict[str, Any]) -> Dict[str, Any]:
         data = super().attributes(data)
         if data["parameters"]["holidayMode"] == "1":
             data["modeZ1"] = "holiday"

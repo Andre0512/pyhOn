@@ -7,7 +7,7 @@ from pyhon.helper import str_to_float
 class HonAttribute:
     _LOCK_TIMEOUT: Final = 10
 
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, str] | str):
         self._value: str = ""
         self._last_update: Optional[datetime] = None
         self._lock_timestamp: Optional[datetime] = None
@@ -22,7 +22,7 @@ class HonAttribute:
             return self._value
 
     @value.setter
-    def value(self, value) -> None:
+    def value(self, value: str) -> None:
         self._value = value
 
     @property

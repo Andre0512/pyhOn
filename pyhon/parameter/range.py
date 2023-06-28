@@ -13,7 +13,7 @@ class HonParameterRange(HonParameter):
         self._default: float = str_to_float(attributes.get("defaultValue", self.min))
         self._value: float = self._default
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__} (<{self.key}> [{self.min} - {self.max}])"
 
     @property

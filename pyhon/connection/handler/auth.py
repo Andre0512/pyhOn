@@ -1,12 +1,13 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Optional, Callable, List, Tuple
+from typing import Optional, List, Tuple, Any
 
 import aiohttp
 
 from pyhon import const
 from pyhon.connection.handler.base import ConnectionHandler
+from pyhon.typedefs import Callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +29,9 @@ class HonAuthConnectionHandler(ConnectionHandler):
 
     @asynccontextmanager
     async def _intercept(
-        self, method: Callable, *args, loop: int = 0, **kwargs
-    ) -> AsyncIterator:
+        self, method: Callback, *args: Any, **kwargs: Any
+    ) -> AsyncIterator[aiohttp.ClientResponse]:
         kwargs["headers"] = kwargs.pop("headers", {}) | self._HEADERS
         async with method(*args, **kwargs) as response:
-            self._called_urls.append((response.status, response.request_info.url))
+            self._called_urls.append((response.status, str(response.request_info.url)))
             yield response

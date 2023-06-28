@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from pyhon import helper
+from pyhon import printer
 
 if TYPE_CHECKING:
     from pyhon.appliance import HonAppliance
@@ -38,7 +38,7 @@ async def load_data(appliance: "HonAppliance", topic: str) -> Tuple[str, str]:
     return topic, await getattr(appliance.api, f"load_{topic}")(appliance)
 
 
-def write_to_json(data: str, topic: str, path: Path, anonymous: bool = False):
+def write_to_json(data: str, topic: str, path: Path, anonymous: bool = False) -> Path:
     json_data = json.dumps(data, indent=4)
     if anonymous:
         json_data = anonymize_data(json_data)
@@ -65,7 +65,9 @@ async def appliance_data(
     return [write_to_json(data, topic, path, anonymous) for topic, data in api_data]
 
 
-async def zip_archive(appliance: "HonAppliance", path: Path, anonymous: bool = False):
+async def zip_archive(
+    appliance: "HonAppliance", path: Path, anonymous: bool = False
+) -> str:
     data = await appliance_data(appliance, path, anonymous)
     archive = data[0].parent
     shutil.make_archive(str(archive.parent), "zip", archive)
@@ -73,7 +75,7 @@ async def zip_archive(appliance: "HonAppliance", path: Path, anonymous: bool = F
     return f"{archive.stem}.zip"
 
 
-def yaml_export(appliance: "HonAppliance", anonymous=False) -> str:
+def yaml_export(appliance: "HonAppliance", anonymous: bool = False) -> str:
     data = {
         "attributes": appliance.attributes.copy(),
         "appliance": appliance.info,
@@ -89,10 +91,10 @@ def yaml_export(appliance: "HonAppliance", anonymous=False) -> str:
             data.get("appliance", {}).pop(sensible, None)
     data = {
         "data": data,
-        "commands": helper.create_command(appliance.commands),
-        "rules": helper.create_rules(appliance.commands),
+        "commands": printer.create_command(appliance.commands),
+        "rules": printer.create_rules(appliance.commands),
     }
-    result = helper.pretty_print(data)
+    result = printer.pretty_print(data)
     if anonymous:
         result = anonymize_data(result)
     return result

@@ -6,6 +6,7 @@ from pyhon.parameter.range import HonParameterRange
 
 if TYPE_CHECKING:
     from pyhon.commands import HonCommand
+    from pyhon.parameter.base import HonParameter
 
 
 @dataclass
@@ -18,18 +19,24 @@ class HonRule:
 
 
 class HonRuleSet:
-    def __init__(self, command: "HonCommand", rule):
+    def __init__(self, command: "HonCommand", rule: Dict[str, Any]):
         self._command: "HonCommand" = command
         self._rules: Dict[str, List[HonRule]] = {}
         self._parse_rule(rule)
 
-    def _parse_rule(self, rule):
+    def _parse_rule(self, rule: Dict[str, Any]) -> None:
         for param_key, params in rule.items():
             param_key = self._command.appliance.options.get(param_key, param_key)
             for trigger_key, trigger_data in params.items():
                 self._parse_conditions(param_key, trigger_key, trigger_data)
 
-    def _parse_conditions(self, param_key, trigger_key, trigger_data, extra=None):
+    def _parse_conditions(
+        self,
+        param_key: str,
+        trigger_key: str,
+        trigger_data: Dict[str, Any],
+        extra: Optional[Dict[str, str]] = None,
+    ) -> None:
         trigger_key = trigger_key.replace("@", "")
         trigger_key = self._command.appliance.options.get(trigger_key, trigger_key)
         for multi_trigger_value, param_data in trigger_data.items():
@@ -46,16 +53,21 @@ class HonRuleSet:
                         self._parse_conditions(param_key, extra_key, extra_data, extra)
 
     def _create_rule(
-        self, param_key, trigger_key, trigger_value, param_data, extras=None
-    ):
+        self,
+        param_key: str,
+        trigger_key: str,
+        trigger_value: str,
+        param_data: Dict[str, Any],
+        extras: Optional[Dict[str, str]] = None,
+    ) -> None:
         if param_data.get("fixedValue") == f"@{param_key}":
             return
         self._rules.setdefault(trigger_key, []).append(
             HonRule(trigger_key, trigger_value, param_key, param_data, extras)
         )
 
-    def _duplicate_for_extra_conditions(self):
-        new = {}
+    def _duplicate_for_extra_conditions(self) -> None:
+        new: Dict[str, List[HonRule]] = {}
         for rules in self._rules.values():
             for rule in rules:
                 if rule.extras is None:
@@ -71,8 +83,8 @@ class HonRuleSet:
             for rule in rules:
                 self._rules.setdefault(key, []).append(rule)
 
-    def _add_trigger(self, parameter, data):
-        def apply(rule: HonRule):
+    def _add_trigger(self, parameter: "HonParameter", data: HonRule) -> None:
+        def apply(rule: HonRule) -> None:
             if rule.extras is not None:
                 for key, value in rule.extras.items():
                     if str(self._command.parameters.get(key)) != str(value):
@@ -96,10 +108,10 @@ class HonRuleSet:
 
         parameter.add_trigger(data.trigger_value, apply, data)
 
-    def patch(self):
+    def patch(self) -> None:
         self._duplicate_for_extra_conditions()
         for name, parameter in self._command.parameters.items():
             if name not in self._rules:
                 continue
-            for data in self._rules.get(name):
+            for data in self._rules.get(name, []):
                 self._add_trigger(parameter, data)

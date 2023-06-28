@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from pprint import pformat
-from typing import Dict, Optional, Any, List, no_type_check
+from types import TracebackType
+from typing import Dict, Optional, Any, List, no_type_check, Type
 
 from aiohttp import ClientSession
 from typing_extensions import Self
@@ -36,7 +37,12 @@ class HonAPI:
     async def __aenter__(self) -> Self:
         return await self.create()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         await self.close()
 
     @property
@@ -46,13 +52,13 @@ class HonAPI:
         return self._hon.auth
 
     @property
-    def _hon(self):
+    def _hon(self) -> HonConnectionHandler:
         if self._hon_handler is None:
             raise exceptions.NoAuthenticationException
         return self._hon_handler
 
     @property
-    def _hon_anonymous(self):
+    def _hon_anonymous(self) -> HonAnonymousConnectionHandler:
         if self._hon_anonymous_handler is None:
             raise exceptions.NoAuthenticationException
         return self._hon_anonymous_handler
@@ -74,7 +80,7 @@ class HonAPI:
         return []
 
     async def load_commands(self, appliance: HonAppliance) -> Dict[str, Any]:
-        params: Dict = {
+        params: Dict[str, str | int] = {
             "applianceType": appliance.appliance_type,
             "applianceModelId": appliance.appliance_model_id,
             "macAddress": appliance.mac_address,
@@ -90,7 +96,7 @@ class HonAPI:
             params["series"] = series
         url: str = f"{const.API_URL}/commands/v1/retrieve"
         async with self._hon.get(url, params=params) as response:
-            result: Dict = (await response.json()).get("payload", {})
+            result: Dict[str, Any] = (await response.json()).get("payload", {})
             if not result or result.pop("resultCode") != "0":
                 _LOGGER.error(await response.json())
                 return {}
@@ -103,7 +109,7 @@ class HonAPI:
             f"{const.API_URL}/commands/v1/appliance/{appliance.mac_address}/history"
         )
         async with self._hon.get(url) as response:
-            result: Dict = await response.json()
+            result: Dict[str, Any] = await response.json()
             if not result or not result.get("payload"):
                 return []
             return result["payload"]["history"]
@@ -113,34 +119,34 @@ class HonAPI:
             f"{const.API_URL}/commands/v1/appliance/{appliance.mac_address}/favourite"
         )
         async with self._hon.get(url) as response:
-            result: Dict = await response.json()
+            result: Dict[str, Any] = await response.json()
             if not result or not result.get("payload"):
                 return []
             return result["payload"]["favourites"]
 
     async def load_last_activity(self, appliance: HonAppliance) -> Dict[str, Any]:
         url: str = f"{const.API_URL}/commands/v1/retrieve-last-activity"
-        params: Dict = {"macAddress": appliance.mac_address}
+        params: Dict[str, str] = {"macAddress": appliance.mac_address}
         async with self._hon.get(url, params=params) as response:
-            result: Dict = await response.json()
+            result: Dict[str, Any] = await response.json()
             if result and (activity := result.get("attributes")):
                 return activity
         return {}
 
     async def load_appliance_data(self, appliance: HonAppliance) -> Dict[str, Any]:
         url: str = f"{const.API_URL}/commands/v1/appliance-model"
-        params: Dict = {
+        params: Dict[str, str] = {
             "code": appliance.code,
             "macAddress": appliance.mac_address,
         }
         async with self._hon.get(url, params=params) as response:
-            result: Dict = await response.json()
+            result: Dict[str, Any] = await response.json()
             if result:
                 return result.get("payload", {}).get("applianceModel", {})
         return {}
 
     async def load_attributes(self, appliance: HonAppliance) -> Dict[str, Any]:
-        params: Dict = {
+        params: Dict[str, str] = {
             "macAddress": appliance.mac_address,
             "applianceType": appliance.appliance_type,
             "category": "CYCLE",
@@ -150,7 +156,7 @@ class HonAPI:
             return (await response.json()).get("payload", {})
 
     async def load_statistics(self, appliance: HonAppliance) -> Dict[str, Any]:
-        params: Dict = {
+        params: Dict[str, str] = {
             "macAddress": appliance.mac_address,
             "applianceType": appliance.appliance_type,
         }
@@ -168,11 +174,11 @@ class HonAPI:
         self,
         appliance: HonAppliance,
         command: str,
-        parameters: Dict,
-        ancillary_parameters: Dict,
+        parameters: Dict[str, Any],
+        ancillary_parameters: Dict[str, Any],
     ) -> bool:
         now: str = datetime.utcnow().isoformat()
-        data: Dict = {
+        data: Dict[str, Any] = {
             "macAddress": appliance.mac_address,
             "timestamp": f"{now[:-3]}Z",
             "commandName": command,
@@ -190,7 +196,7 @@ class HonAPI:
         }
         url: str = f"{const.API_URL}/commands/v1/send"
         async with self._hon.post(url, json=data) as response:
-            json_data: Dict = await response.json()
+            json_data: Dict[str, Any] = await response.json()
             if json_data.get("payload", {}).get("resultCode") == "0":
                 return True
             _LOGGER.error(await response.text())
@@ -200,7 +206,7 @@ class HonAPI:
     async def appliance_configuration(self) -> Dict[str, Any]:
         url: str = f"{const.API_URL}/config/v1/program-list-rules"
         async with self._hon_anonymous.get(url) as response:
-            result: Dict = await response.json()
+            result: Dict[str, Any] = await response.json()
             if result and (data := result.get("payload")):
                 return data
         return {}
@@ -209,7 +215,7 @@ class HonAPI:
         self, language: str = "en", beta: bool = True
     ) -> Dict[str, Any]:
         url: str = f"{const.API_URL}/app-config"
-        payload_data: Dict = {
+        payload_data: Dict[str, str | int] = {
             "languageCode": language,
             "beta": beta,
             "appVersion": const.APP_VERSION,
@@ -237,12 +243,12 @@ class HonAPI:
 
 
 class TestAPI(HonAPI):
-    def __init__(self, path):
+    def __init__(self, path: Path):
         super().__init__()
         self._anonymous = True
         self._path: Path = path
 
-    def _load_json(self, appliance: HonAppliance, file) -> Dict[str, Any]:
+    def _load_json(self, appliance: HonAppliance, file: str) -> Dict[str, Any]:
         directory = f"{appliance.appliance_type}_{appliance.appliance_model_id}".lower()
         path = f"{self._path}/{directory}/{file}.json"
         with open(path, "r", encoding="utf-8") as json_file:
@@ -288,7 +294,7 @@ class TestAPI(HonAPI):
         self,
         appliance: HonAppliance,
         command: str,
-        parameters: Dict,
-        ancillary_parameters: Dict,
+        parameters: Dict[str, Any],
+        ancillary_parameters: Dict[str, Any],
     ) -> bool:
         return True

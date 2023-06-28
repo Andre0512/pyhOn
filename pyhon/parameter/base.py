@@ -12,7 +12,9 @@ class HonParameter:
         self._mandatory: int = attributes.get("mandatory", 0)
         self._value: str | float = ""
         self._group: str = group
-        self._triggers: Dict[str, List[Tuple[Callable, "HonRule"]]] = {}
+        self._triggers: Dict[
+            str, List[Tuple[Callable[["HonRule"], None], "HonRule"]]
+        ] = {}
 
     @property
     def key(self) -> str:
@@ -51,20 +53,22 @@ class HonParameter:
     def group(self) -> str:
         return self._group
 
-    def add_trigger(self, value, func, data):
+    def add_trigger(
+        self, value: str, func: Callable[["HonRule"], None], data: "HonRule"
+    ) -> None:
         if self._value == value:
             func(data)
         self._triggers.setdefault(value, []).append((func, data))
 
-    def check_trigger(self, value) -> None:
+    def check_trigger(self, value: str | float) -> None:
         if str(value) in self._triggers:
             for trigger in self._triggers[str(value)]:
                 func, args = trigger
                 func(args)
 
     @property
-    def triggers(self):
-        result = {}
+    def triggers(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {}
         for value, rules in self._triggers.items():
             for _, rule in rules:
                 if rule.extras:

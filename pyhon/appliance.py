@@ -2,14 +2,15 @@ import importlib
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any, TYPE_CHECKING
+from typing import Optional, Dict, Any, TYPE_CHECKING, List
 
-from pyhon import diagnose
+from pyhon import diagnose, exceptions
 from pyhon.attributes import HonAttribute
 from pyhon.command_loader import HonCommandLoader
 from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.range import HonParameterRange
+from pyhon.typedefs import Parameter
 
 if TYPE_CHECKING:
     from pyhon import HonAPI
@@ -25,16 +26,16 @@ class HonAppliance:
     ) -> None:
         if attributes := info.get("attributes"):
             info["attributes"] = {v["parName"]: v["parValue"] for v in attributes}
-        self._info: Dict = info
+        self._info: Dict[str, Any] = info
         self._api: Optional[HonAPI] = api
-        self._appliance_model: Dict = {}
+        self._appliance_model: Dict[str, Any] = {}
 
         self._commands: Dict[str, HonCommand] = {}
-        self._statistics: Dict = {}
-        self._attributes: Dict = {}
+        self._statistics: Dict[str, Any] = {}
+        self._attributes: Dict[str, Any] = {}
         self._zone: int = zone
         self._additional_data: Dict[str, Any] = {}
-        self._last_update = None
+        self._last_update: Optional[datetime] = None
         self._default_setting = HonParameter("", {}, "")
 
         try:
@@ -44,7 +45,7 @@ class HonAppliance:
         except ModuleNotFoundError:
             self._extra = None
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         if self._zone:
             item += f"Z{self._zone}"
         if "." in item:
@@ -61,7 +62,7 @@ class HonAppliance:
             return self.attributes["parameters"][item].value
         return self.info[item]
 
-    def get(self, item, default=None):
+    def get(self, item: str, default: Any = None) -> Any:
         try:
             return self[item]
         except (KeyError, IndexError):
@@ -113,7 +114,7 @@ class HonAppliance:
         return self._info.get("applianceModelId", 0)
 
     @property
-    def options(self):
+    def options(self) -> Dict[str, Any]:
         return self._appliance_model.get("options", {})
 
     @property
@@ -121,19 +122,19 @@ class HonAppliance:
         return self._commands
 
     @property
-    def attributes(self):
+    def attributes(self) -> Dict[str, Any]:
         return self._attributes
 
     @property
-    def statistics(self):
+    def statistics(self) -> Dict[str, Any]:
         return self._statistics
 
     @property
-    def info(self):
+    def info(self) -> Dict[str, Any]:
         return self._info
 
     @property
-    def additional_data(self):
+    def additional_data(self) -> Dict[str, Any]:
         return self._additional_data
 
     @property
@@ -141,17 +142,20 @@ class HonAppliance:
         return self._zone
 
     @property
-    def api(self) -> Optional["HonAPI"]:
+    def api(self) -> "HonAPI":
+        """api connection object"""
+        if self._api is None:
+            raise exceptions.NoAuthenticationException("Missing hOn login")
         return self._api
 
-    async def load_commands(self):
+    async def load_commands(self) -> None:
         command_loader = HonCommandLoader(self.api, self)
         await command_loader.load_commands()
         self._commands = command_loader.commands
         self._additional_data = command_loader.additional_data
         self._appliance_model = command_loader.appliance_data
 
-    async def load_attributes(self):
+    async def load_attributes(self) -> None:
         self._attributes = await self.api.load_attributes(self)
         for name, values in self._attributes.pop("shadow").get("parameters").items():
             if name in self._attributes.get("parameters", {}):
@@ -163,11 +167,11 @@ class HonAppliance:
         if self._extra:
             self._attributes = self._extra.attributes(self._attributes)
 
-    async def load_statistics(self):
+    async def load_statistics(self) -> None:
         self._statistics = await self.api.load_statistics(self)
         self._statistics |= await self.api.load_maintenance(self)
 
-    async def update(self, force=False):
+    async def update(self, force: bool = False) -> None:
         now = datetime.now()
         if (
             force
@@ -179,11 +183,11 @@ class HonAppliance:
             await self.load_attributes()
 
     @property
-    def command_parameters(self):
+    def command_parameters(self) -> Dict[str, Dict[str, str | float]]:
         return {n: c.parameter_value for n, c in self._commands.items()}
 
     @property
-    def settings(self):
+    def settings(self) -> Dict[str, Parameter]:
         result = {}
         for name, command in self._commands.items():
             for key in command.setting_keys:
@@ -194,7 +198,7 @@ class HonAppliance:
         return result
 
     @property
-    def available_settings(self):
+    def available_settings(self) -> List[str]:
         result = []
         for name, command in self._commands.items():
             for key in command.setting_keys:
@@ -202,7 +206,7 @@ class HonAppliance:
         return result
 
     @property
-    def data(self):
+    def data(self) -> Dict[str, Any]:
         result = {
             "attributes": self.attributes,
             "appliance": self.info,
@@ -220,15 +224,16 @@ class HonAppliance:
     async def data_archive(self, path: Path) -> str:
         return await diagnose.zip_archive(self, path, anonymous=True)
 
-    def sync_to_params(self, command_name):
-        command: HonCommand = self.commands.get(command_name)
+    def sync_to_params(self, command_name: str) -> None:
+        if not (command := self.commands.get(command_name)):
+            return
         for key, value in self.attributes.get("parameters", {}).items():
             if isinstance(value, str) and (new := command.parameters.get(key)):
                 self.attributes["parameters"][key].update(
                     str(new.intern_value), shield=True
                 )
 
-    def sync_command(self, main, target=None) -> None:
+    def sync_command(self, main: str, target: Optional[List[str]] = None) -> None:
         base: Optional[HonCommand] = self.commands.get(main)
         if not base:
             return

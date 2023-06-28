@@ -1,8 +1,11 @@
+from typing import Any, Dict
+
 from pyhon.appliances.base import ApplianceBase
+from pyhon.parameter.program import HonParameterProgram
 
 
 class Appliance(ApplianceBase):
-    def attributes(self, data):
+    def attributes(self, data: Dict[str, Any]) -> Dict[str, Any]:
         data = super().attributes(data)
         if data.get("lastConnEvent", {}).get("category", "") == "DISCONNECTED":
             data["parameters"]["temp"].value = "0"
@@ -13,7 +16,9 @@ class Appliance(ApplianceBase):
         data["active"] = data["parameters"]["onOffStatus"] == "1"
 
         if program := int(data["parameters"]["prCode"]):
-            ids = self.parent.settings["startProgram.program"].ids
-            data["programName"] = ids.get(program, "")
+            if (setting := self.parent.settings["startProgram.program"]) and isinstance(
+                setting, HonParameterProgram
+            ):
+                data["programName"] = setting.ids.get(program, "")
 
         return data

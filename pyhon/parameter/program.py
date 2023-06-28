@@ -36,7 +36,7 @@ class HonParameterProgram(HonParameterEnum):
         return sorted(values)
 
     @values.setter
-    def values(self, values) -> None:
+    def values(self, values: List[str]) -> None:
         return
 
     @property
@@ -50,5 +50,5 @@ class HonParameterProgram(HonParameterEnum):
         }
         return dict(sorted(values.items()))
 
-    def set_value(self, value: str):
+    def set_value(self, value: str) -> None:
         self._value = value

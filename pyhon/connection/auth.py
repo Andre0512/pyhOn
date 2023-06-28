@@ -6,14 +6,16 @@ import urllib
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from urllib import parse
 from urllib.parse import quote
 
+import aiohttp
 from aiohttp import ClientResponse
 from yarl import URL
 
 from pyhon import const, exceptions
+from pyhon.connection.device import HonDevice
 from pyhon.connection.handler.auth import HonAuthConnectionHandler
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,14 +27,20 @@ class HonLoginData:
     email: str = ""
     password: str = ""
     fw_uid: str = ""
-    loaded: Optional[Dict] = None
+    loaded: Optional[Dict[str, Any]] = None
 
 
 class HonAuth:
     _TOKEN_EXPIRES_AFTER_HOURS = 8
     _TOKEN_EXPIRE_WARNING_HOURS = 7
 
-    def __init__(self, session, email, password, device) -> None:
+    def __init__(
+        self,
+        session: aiohttp.ClientSession,
+        email: str,
+        password: str,
+        device: HonDevice,
+    ) -> None:
         self._session = session
         self._request = HonAuthConnectionHandler(session)
         self._login_data = HonLoginData()
@@ -120,7 +128,7 @@ class HonAuth:
                 await self._error_logger(response)
         return new_location
 
-    async def _handle_redirects(self, login_url) -> str:
+    async def _handle_redirects(self, login_url: str) -> str:
         redirect1 = await self._manual_redirect(login_url)
         redirect2 = await self._manual_redirect(redirect1)
         return f"{redirect2}&System=IoT_Mobile_App&RegistrationSubChannel=hOn"

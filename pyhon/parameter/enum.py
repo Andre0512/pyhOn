@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 from pyhon.parameter.base import HonParameter
 
 
-def clean_value(value):
+def clean_value(value: str | float) -> str:
     return str(value).strip("[]").replace("|", "_").lower()
 
 
@@ -24,7 +24,7 @@ class HonParameterEnum(HonParameter):
         return [clean_value(value) for value in self._values]
 
     @values.setter
-    def values(self, values) -> None:
+    def values(self, values: List[str]) -> None:
         self._values = values
 
     @property

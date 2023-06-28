@@ -70,11 +70,11 @@ class Hon:
         return self._appliances
 
     @appliances.setter
-    def appliances(self, appliances) -> None:
+    def appliances(self, appliances: List[HonAppliance]) -> None:
         self._appliances = appliances
 
     async def _create_appliance(
-        self, appliance_data: Dict[str, Any], api: HonAPI, zone=0
+        self, appliance_data: Dict[str, Any], api: HonAPI, zone: int = 0
     ) -> None:
         appliance = HonAppliance(api, appliance_data, zone=zone)
         if appliance.mac_address == "":

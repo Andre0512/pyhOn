@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import suppress
 from copy import copy
-from typing import Dict, Any, Optional, TYPE_CHECKING, List
+from typing import Dict, Any, Optional, TYPE_CHECKING, List, Collection
 
 from pyhon.commands import HonCommand
 from pyhon.parameter.fixed import HonParameterFixed
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class HonCommandLoader:
     """Loads and parses hOn command data"""
 
-    def __init__(self, api, appliance):
+    def __init__(self, api: "HonAPI", appliance: "HonAppliance") -> None:
         self._api_commands: Dict[str, Any] = {}
         self._favourites: List[Dict[str, Any]] = []
         self._command_history: List[Dict[str, Any]] = []
@@ -52,7 +52,7 @@ class HonCommandLoader:
         """Get command additional data"""
         return self._additional_data
 
-    async def load_commands(self):
+    async def load_commands(self) -> None:
         """Trigger loading of command data"""
         await self._load_data()
         self._appliance_data = self._api_commands.pop("applianceModel")
@@ -60,17 +60,17 @@ class HonCommandLoader:
         self._add_favourites()
         self._recover_last_command_states()
 
-    async def _load_commands(self):
+    async def _load_commands(self) -> None:
         self._api_commands = await self._api.load_commands(self._appliance)
 
-    async def _load_favourites(self):
+    async def _load_favourites(self) -> None:
         self._favourites = await self._api.load_favourites(self._appliance)
 
-    async def _load_command_history(self):
+    async def _load_command_history(self) -> None:
         self._command_history = await self._api.load_command_history(self._appliance)
 
-    async def _load_data(self):
-        """Request parallel all relevant data"""
+    async def _load_data(self) -> None:
+        """Callback parallel all relevant data"""
         await asyncio.gather(
             *[
                 self._load_commands(),
@@ -102,14 +102,24 @@ class HonCommandLoader:
         self._commands = {c.name: c for c in commands}
 
     def _parse_command(
-        self, data: Dict[str, Any] | str, command_name: str, **kwargs
+        self,
+        data: Dict[str, Any] | str,
+        command_name: str,
+        categories: Optional[Dict[str, "HonCommand"]] = None,
+        category_name: str = "",
     ) -> Optional[HonCommand]:
         """Try to crate HonCommand object"""
         if not isinstance(data, dict):
             self._additional_data[command_name] = data
             return None
         if self._is_command(data):
-            return HonCommand(command_name, data, self._appliance, **kwargs)
+            return HonCommand(
+                command_name,
+                data,
+                self._appliance,
+                category_name=category_name,
+                categories=categories,
+            )
         if category := self._parse_categories(data, command_name):
             return category
         return None
@@ -120,8 +130,9 @@ class HonCommandLoader:
         """Parse categories and create reference to other"""
         categories: Dict[str, HonCommand] = {}
         for category, value in data.items():
-            kwargs = {"category_name": category, "categories": categories}
-            if command := self._parse_command(value, command_name, **kwargs):
+            if command := self._parse_command(
+                value, command_name, category_name=category, categories=categories
+            ):
                 categories[self._clean_name(category)] = command
         if categories:
             # setParameters should be at first place

@@ -2,7 +2,7 @@ import json
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Optional, Callable, Dict
+from typing import Optional, Dict, Any
 
 import aiohttp
 from typing_extensions import Self
@@ -11,6 +11,7 @@ from pyhon.connection.auth import HonAuth
 from pyhon.connection.device import HonDevice
 from pyhon.connection.handler.base import ConnectionHandler
 from pyhon.exceptions import HonAuthenticationError, NoAuthenticationException
+from pyhon.typedefs import Callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,10 +42,10 @@ class HonConnectionHandler(ConnectionHandler):
 
     async def create(self) -> Self:
         await super().create()
-        self._auth = HonAuth(self._session, self._email, self._password, self._device)
+        self._auth = HonAuth(self.session, self._email, self._password, self._device)
         return self
 
-    async def _check_headers(self, headers: Dict) -> Dict:
+    async def _check_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
         if not (self.auth.cognito_token and self.auth.id_token):
             await self.auth.authenticate()
         headers["cognito-token"] = self.auth.cognito_token
@@ -53,18 +54,16 @@ class HonConnectionHandler(ConnectionHandler):
 
     @asynccontextmanager
     async def _intercept(
-        self, method: Callable, *args, loop: int = 0, **kwargs
-    ) -> AsyncIterator:
+        self, method: Callback, *args: Any, loop: int = 0, **kwargs: Dict[str, str]
+    ) -> AsyncIterator[aiohttp.ClientResponse]:
         kwargs["headers"] = await self._check_headers(kwargs.get("headers", {}))
-        async with method(*args, **kwargs) as response:
+        async with method(args[0], *args[1:], **kwargs) as response:
             if (
                 self.auth.token_expires_soon or response.status in [401, 403]
             ) and loop == 0:
                 _LOGGER.info("Try refreshing token...")
                 await self.auth.refresh()
-                async with self._intercept(
-                    method, *args, loop=loop + 1, **kwargs
-                ) as result:
+                async with self._intercept(method, loop=loop + 1, **kwargs) as result:
                     yield result
             elif (
                 self.auth.token_is_expired or response.status in [401, 403]
@@ -76,9 +75,7 @@ class HonConnectionHandler(ConnectionHandler):
                     await response.text(),
                 )
                 await self.create()
-                async with self._intercept(
-                    method, *args, loop=loop + 1, **kwargs
-                ) as result:
+                async with self._intercept(method, loop=loop + 1, **kwargs) as result:
                     yield result
             elif loop >= 2:
                 _LOGGER.error(

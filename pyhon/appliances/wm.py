@@ -1,8 +1,10 @@
+from typing import Any, Dict
+
 from pyhon.appliances.base import ApplianceBase
 
 
 class Appliance(ApplianceBase):
-    def attributes(self, data):
+    def attributes(self, data: Dict[str, Any]) -> Dict[str, Any]:
         data = super().attributes(data)
         if data.get("lastConnEvent", {}).get("category", "") == "DISCONNECTED":
             data["parameters"]["machMode"].value = "0"
@@ -10,5 +12,5 @@ class Appliance(ApplianceBase):
         data["pause"] = data["parameters"]["machMode"] == "3"
         return data
 
-    def settings(self, settings):
+    def settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
         return settings

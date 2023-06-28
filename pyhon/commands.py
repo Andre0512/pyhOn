@@ -9,6 +9,7 @@ from pyhon.parameter.fixed import HonParameterFixed
 from pyhon.parameter.program import HonParameterProgram
 from pyhon.parameter.range import HonParameterRange
 from pyhon.rules import HonRuleSet
+from pyhon.typedefs import Parameter
 
 if TYPE_CHECKING:
     from pyhon import HonAPI
@@ -43,7 +44,7 @@ class HonCommand:
         return f"{self._name} command"
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
@@ -57,7 +58,7 @@ class HonCommand:
         return self._appliance
 
     @property
-    def data(self):
+    def data(self) -> Dict[str, Any]:
         return self._data
 
     @property
@@ -79,14 +80,16 @@ class HonCommand:
     def parameter_value(self) -> Dict[str, Union[str, float]]:
         return {n: p.value for n, p in self._parameters.items()}
 
-    def _load_parameters(self, attributes):
+    def _load_parameters(self, attributes: Dict[str, Dict[str, Any]]) -> None:
         for key, items in attributes.items():
             for name, data in items.items():
                 self._create_parameters(data, name, key)
         for rule in self._rules:
             rule.patch()
 
-    def _create_parameters(self, data: Dict, name: str, parameter: str) -> None:
+    def _create_parameters(
+        self, data: Dict[str, Any], name: str, parameter: str
+    ) -> None:
         if name == "zoneMap" and self._appliance.zone:
             data["default"] = self._appliance.zone
         if data.get("category") == "rule":
@@ -147,7 +150,7 @@ class HonCommand:
         )
 
     @staticmethod
-    def _more_options(first: HonParameter, second: HonParameter):
+    def _more_options(first: Parameter, second: Parameter) -> Parameter:
         if isinstance(first, HonParameterFixed) and not isinstance(
             second, HonParameterFixed
         ):
@@ -157,8 +160,8 @@ class HonCommand:
         return first
 
     @property
-    def available_settings(self) -> Dict[str, HonParameter]:
-        result: Dict[str, HonParameter] = {}
+    def available_settings(self) -> Dict[str, Parameter]:
+        result: Dict[str, Parameter] = {}
         for command in self.categories.values():
             for name, parameter in command.parameters.items():
                 if name in result:
