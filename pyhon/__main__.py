@@ -37,6 +37,9 @@ def get_arguments() -> Dict[str, Any]:
         "translate", help="language (de, en, fr...)", metavar="LANGUAGE"
     )
     translate.add_argument("--json", help="print as json", action="store_true")
+    parser.add_argument(
+        "-i", "--import", help="import pyhon data", nargs="?", default=Path().cwd()
+    )
     return vars(parser.parse_args())
 
 
@@ -69,7 +72,9 @@ async def main() -> None:
     if language := args.get("translate"):
         await translate(language, json_output=args.get("json", ""))
         return
-    async with Hon(*get_login_data(args)) as hon:
+    async with Hon(
+        *get_login_data(args), test_data_path=Path(args.get("import", ""))
+    ) as hon:
         for device in hon.appliances:
             if args.get("export"):
                 anonymous = args.get("anonymous", False)
