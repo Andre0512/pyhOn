@@ -29,7 +29,7 @@ def anonymize_data(data: str) -> str:
         for match in re.findall(f'"{sensible}.*?":\\s"?(.+?)"?,?\\n', data):
             replace = re.sub("[a-z]", "x", match)
             replace = re.sub("[A-Z]", "X", replace)
-            replace = re.sub("\\d", "0", replace)
+            replace = re.sub("\\d", "1", replace)
             data = data.replace(match, replace)
     return data
 

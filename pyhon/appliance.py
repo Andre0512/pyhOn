@@ -1,5 +1,6 @@
 import importlib
 import logging
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Dict, Any, TYPE_CHECKING, List
@@ -69,9 +70,9 @@ class HonAppliance:
             return default
 
     def _check_name_zone(self, name: str, frontend: bool = True) -> str:
-        middle = " Z" if frontend else "_z"
+        zone = " Z" if frontend else "_z"
         if (attribute := self._info.get(name, "")) and self._zone:
-            return f"{attribute}{middle}{self._zone}"
+            return f"{attribute}{zone}{self._zone}"
         return attribute
 
     @property
@@ -88,7 +89,11 @@ class HonAppliance:
 
     @property
     def unique_id(self) -> str:
-        return self._check_name_zone("macAddress", frontend=False)
+        default_mac = "xx-xx-xx-xx-xx-xx"
+        import_name = f"{self.appliance_type.lower()}_{self.appliance_model_id}"
+        result = self._check_name_zone("macAddress", frontend=False)
+        result = result.replace(default_mac, import_name)
+        return result
 
     @property
     def model_name(self) -> str:
@@ -100,7 +105,10 @@ class HonAppliance:
 
     @property
     def nick_name(self) -> str:
-        return self._check_name_zone("nickName")
+        result = self._check_name_zone("nickName")
+        if not result or re.findall("^[xX\s]+$", result):
+            return self.model_name
+        return result
 
     @property
     def code(self) -> str:
