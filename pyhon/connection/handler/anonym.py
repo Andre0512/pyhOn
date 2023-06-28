@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Dict, Any
 
 import aiohttp
+from yarl import URL
 
 from pyhon import const
 from pyhon.connection.handler.base import ConnectionHandler
@@ -17,10 +18,10 @@ class HonAnonymousConnectionHandler(ConnectionHandler):
 
     @asynccontextmanager
     async def _intercept(
-        self, method: Callback, *args: Any, **kwargs: Any
+        self, method: Callback, url: str | URL, *args: Any, **kwargs: Dict[str, Any]
     ) -> AsyncIterator[aiohttp.ClientResponse]:
         kwargs["headers"] = kwargs.pop("headers", {}) | self._HEADERS
-        async with method(*args, **kwargs) as response:
+        async with method(url, *args, **kwargs) as response:
             if response.status == 403:
                 _LOGGER.error("Can't authenticate anymore")
             yield response

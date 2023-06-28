@@ -6,6 +6,7 @@ from typing import Optional, Dict, Type, Any, Protocol
 
 import aiohttp
 from typing_extensions import Self
+from yarl import URL
 
 from pyhon import const, exceptions
 from pyhon.typedefs import Callback
@@ -47,7 +48,7 @@ class ConnectionHandler:
 
     @asynccontextmanager
     def _intercept(
-        self, method: Callback, *args: Any, loop: int = 0, **kwargs: Any
+        self, method: Callback, url: str | URL, *args: Any, **kwargs: Dict[str, Any]
     ) -> AsyncIterator[aiohttp.ClientResponse]:
         raise NotImplementedError
 
