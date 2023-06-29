@@ -57,7 +57,7 @@ class HonConnectionHandler(ConnectionHandler):
     async def _intercept(
         self, method: Callback, url: str | URL, *args: Any, **kwargs: Any
     ) -> AsyncIterator[aiohttp.ClientResponse]:
-        loop: int = kwargs.get("loop", 0)
+        loop: int = kwargs.pop("loop", 0)
         kwargs["headers"] = await self._check_headers(kwargs.get("headers", {}))
         async with method(url, *args, **kwargs) as response:
             if (

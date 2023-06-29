@@ -55,7 +55,7 @@ class HonCommandLoader:
     async def load_commands(self) -> None:
         """Trigger loading of command data"""
         await self._load_data()
-        self._appliance_data = self._api_commands.pop("applianceModel")
+        self._appliance_data = self._api_commands.pop("applianceModel", {})
         self._get_commands()
         self._add_favourites()
         self._recover_last_command_states()

@@ -250,9 +250,11 @@ class TestAPI(HonAPI):
 
     def _load_json(self, appliance: HonAppliance, file: str) -> Dict[str, Any]:
         directory = f"{appliance.appliance_type}_{appliance.appliance_model_id}".lower()
-        path = f"{self._path}/{directory}/{file}.json"
-        with open(path, "r", encoding="utf-8") as json_file:
-            return json.loads(json_file.read())
+        if (path := self._path / directory / f"{file}.json").exists():
+            with open(path, "r", encoding="utf-8") as json_file:
+                return json.loads(json_file.read())
+        _LOGGER.warning(f"Can't open {str(path)}")
+        return {}
 
     async def load_appliances(self) -> List[Dict[str, Any]]:
         result = []

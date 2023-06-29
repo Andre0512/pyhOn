@@ -15,7 +15,7 @@ class Appliance(ApplianceBase):
 
         data["active"] = data["parameters"]["onOffStatus"] == "1"
 
-        if program := int(data["parameters"]["prCode"]):
+        if program := int(data["parameters"]["prCode"].value):
             if (setting := self.parent.settings["startProgram.program"]) and isinstance(
                 setting, HonParameterProgram
             ):
