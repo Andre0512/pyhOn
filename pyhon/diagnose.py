@@ -70,7 +70,7 @@ async def zip_archive(
 ) -> str:
     data = await appliance_data(appliance, path, anonymous)
     archive = data[0].parent
-    shutil.make_archive(str(archive.parent), "zip", archive)
+    shutil.make_archive(str(archive), "zip", archive)
     shutil.rmtree(archive)
     return f"{archive.stem}.zip"
 
