@@ -169,9 +169,9 @@ class HonAppliance:
         self.sync_params_to_command("settings")
 
     async def load_attributes(self) -> None:
-        self._attributes = await self.api.load_attributes(self)
+        attributes = await self.api.load_attributes(self)
         for name, values in (
-            self._attributes.pop("shadow", {}).get("parameters", {}).items()
+            attributes.pop("shadow", {}).get("parameters", {}).items()
         ):
             if name in self._attributes.get("parameters", {}):
                 self._attributes["parameters"][name].update(values)
@@ -179,6 +179,7 @@ class HonAppliance:
                 self._attributes.setdefault("parameters", {})[name] = HonAttribute(
                     values
                 )
+        self._attributes |= attributes
         if self._extra:
             self._attributes = self._extra.attributes(self._attributes)
 
