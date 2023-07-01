@@ -115,7 +115,7 @@ class HonCommand:
         params = self.parameter_groups.get("parameters", {})
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         ancillary_params.pop("programRules", None)
-        self.appliance.sync_to_params(self.name)
+        self.appliance.sync_command_to_params(self.name)
         try:
             result = await self.api.send_command(
                 self._appliance, self._name, params, ancillary_params

@@ -103,7 +103,8 @@ class HonAppliance:
 
     @property
     def brand(self) -> str:
-        return self._check_name_zone("brand")
+        brand = self._check_name_zone("brand")
+        return brand[0].upper() + brand[1:]
 
     @property
     def nick_name(self) -> str:
@@ -165,6 +166,7 @@ class HonAppliance:
         self._commands = command_loader.commands
         self._additional_data = command_loader.additional_data
         self._appliance_model = command_loader.appliance_data
+        self.sync_params_to_command("settings")
 
     async def load_attributes(self) -> None:
         self._attributes = await self.api.load_attributes(self)
@@ -194,6 +196,7 @@ class HonAppliance:
         ):
             self._last_update = now
             await self.load_attributes()
+            self.sync_params_to_command("settings")
 
     @property
     def command_parameters(self) -> Dict[str, Dict[str, str | float]]:
@@ -237,14 +240,30 @@ class HonAppliance:
     async def data_archive(self, path: Path) -> str:
         return await diagnose.zip_archive(self, path, anonymous=True)
 
-    def sync_to_params(self, command_name: str) -> None:
+    def sync_command_to_params(self, command_name: str) -> None:
         if not (command := self.commands.get(command_name)):
             return
-        for key, value in self.attributes.get("parameters", {}).items():
+        for key in self.attributes.get("parameters", {}):
             if new := command.parameters.get(key):
                 self.attributes["parameters"][key].update(
                     str(new.intern_value), shield=True
                 )
+
+    def sync_params_to_command(self, command_name: str) -> None:
+        if not (command := self.commands.get(command_name)):
+            return
+        for key in command.setting_keys:
+            if (new := self.attributes.get("parameters", {}).get(key)) is None:
+                continue
+            setting = command.settings[key]
+            try:
+                if not isinstance(setting, HonParameterRange):
+                    command.settings[key].value = str(new.value)
+                else:
+                    command.settings[key].value = float(new.value)
+            except ValueError as error:
+                _LOGGER.info("Can't set %s - %s", key, error)
+                continue
 
     def sync_command(self, main: str, target: Optional[List[str] | str] = None) -> None:
         base: Optional[HonCommand] = self.commands.get(main)

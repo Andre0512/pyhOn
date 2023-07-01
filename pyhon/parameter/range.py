@@ -49,7 +49,9 @@ class HonParameterRange(HonParameter):
     @value.setter
     def value(self, value: str | float) -> None:
         value = str_to_float(value)
-        if self.min <= value <= self.max and not (value - self.min) % self.step:
+        if self.min <= value <= self.max and not ((value - self.min) * 100) % (
+            self.step * 100
+        ):
             self._value = value
             self.check_trigger(value)
         else:
