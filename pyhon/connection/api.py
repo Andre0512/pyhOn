@@ -75,8 +75,12 @@ class HonAPI:
 
     async def load_appliances(self) -> List[Dict[str, Any]]:
         async with self._hon.get(f"{const.API_URL}/commands/v1/appliance") as resp:
-            if result := await resp.json():
-                return result.get("payload", {}).get("appliances", {})
+            result = await resp.json()
+        if result:
+            appliances: List[Dict[str, Any]] = result.get("payload", {}).get(
+                "appliances", {}
+            )
+            return appliances
         return []
 
     async def load_commands(self, appliance: HonAppliance) -> Dict[str, Any]:
@@ -110,9 +114,10 @@ class HonAPI:
         )
         async with self._hon.get(url) as response:
             result: Dict[str, Any] = await response.json()
-            if not result or not result.get("payload"):
-                return []
-            return result["payload"]["history"]
+        if not result or not result.get("payload"):
+            return []
+        command_history: List[Dict[str, Any]] = result["payload"]["history"]
+        return command_history
 
     async def load_favourites(self, appliance: HonAppliance) -> List[Dict[str, Any]]:
         url: str = (
@@ -120,17 +125,20 @@ class HonAPI:
         )
         async with self._hon.get(url) as response:
             result: Dict[str, Any] = await response.json()
-            if not result or not result.get("payload"):
-                return []
-            return result["payload"]["favourites"]
+        if not result or not result.get("payload"):
+            return []
+        favourites: List[Dict[str, Any]] = result["payload"]["favourites"]
+        return favourites
 
     async def load_last_activity(self, appliance: HonAppliance) -> Dict[str, Any]:
         url: str = f"{const.API_URL}/commands/v1/retrieve-last-activity"
         params: Dict[str, str] = {"macAddress": appliance.mac_address}
         async with self._hon.get(url, params=params) as response:
             result: Dict[str, Any] = await response.json()
-            if result and (activity := result.get("attributes")):
-                return activity
+            if result:
+                activity: Dict[str, Any] = result.get("attributes", "")
+                if activity:
+                    return activity
         return {}
 
     async def load_appliance_data(self, appliance: HonAppliance) -> Dict[str, Any]:
@@ -142,7 +150,10 @@ class HonAPI:
         async with self._hon.get(url, params=params) as response:
             result: Dict[str, Any] = await response.json()
             if result:
-                return result.get("payload", {}).get("applianceModel", {})
+                appliance_data: Dict[str, Any] = result.get("payload", {}).get(
+                    "applianceModel", {}
+                )
+                return appliance_data
         return {}
 
     async def load_attributes(self, appliance: HonAppliance) -> Dict[str, Any]:
@@ -153,7 +164,8 @@ class HonAPI:
         }
         url: str = f"{const.API_URL}/commands/v1/context"
         async with self._hon.get(url, params=params) as response:
-            return (await response.json()).get("payload", {})
+            attributes: Dict[str, Any] = (await response.json()).get("payload", {})
+        return attributes
 
     async def load_statistics(self, appliance: HonAppliance) -> Dict[str, Any]:
         params: Dict[str, str] = {
@@ -162,13 +174,15 @@ class HonAPI:
         }
         url: str = f"{const.API_URL}/commands/v1/statistics"
         async with self._hon.get(url, params=params) as response:
-            return (await response.json()).get("payload", {})
+            statistics: Dict[str, Any] = (await response.json()).get("payload", {})
+        return statistics
 
     async def load_maintenance(self, appliance: HonAppliance) -> Dict[str, Any]:
         url = f"{const.API_URL}/commands/v1/maintenance-cycle"
         params = {"macAddress": appliance.mac_address}
         async with self._hon.get(url, params=params) as response:
-            return (await response.json()).get("payload", {})
+            maintenance: Dict[str, Any] = (await response.json()).get("payload", {})
+        return maintenance
 
     async def send_command(
         self,
@@ -207,9 +221,8 @@ class HonAPI:
         url: str = f"{const.API_URL}/config/v1/program-list-rules"
         async with self._hon_anonymous.get(url) as response:
             result: Dict[str, Any] = await response.json()
-            if result and (data := result.get("payload")):
-                return data
-        return {}
+        data: Dict[str, Any] = result.get("payload", {})
+        return data
 
     async def app_config(
         self, language: str = "en", beta: bool = True
@@ -223,17 +236,17 @@ class HonAPI:
         }
         payload: str = json.dumps(payload_data, separators=(",", ":"))
         async with self._hon_anonymous.post(url, data=payload) as response:
-            if (result := await response.json()) and (data := result.get("payload")):
-                return data
-        return {}
+            result = await response.json()
+        data: Dict[str, Any] = result.get("payload", {})
+        return data
 
     async def translation_keys(self, language: str = "en") -> Dict[str, Any]:
         config = await self.app_config(language=language)
-        if url := config.get("language", {}).get("jsonPath"):
-            async with self._hon_anonymous.get(url) as response:
-                if result := await response.json():
-                    return result
-        return {}
+        if not (url := config.get("language", {}).get("jsonPath")):
+            return {}
+        async with self._hon_anonymous.get(url) as response:
+            result: Dict[str, Any] = await response.json()
+        return result
 
     async def close(self) -> None:
         if self._hon_handler is not None:
@@ -250,11 +263,12 @@ class TestAPI(HonAPI):
 
     def _load_json(self, appliance: HonAppliance, file: str) -> Dict[str, Any]:
         directory = f"{appliance.appliance_type}_{appliance.appliance_model_id}".lower()
-        if (path := self._path / directory / f"{file}.json").exists():
-            with open(path, "r", encoding="utf-8") as json_file:
-                return json.loads(json_file.read())
-        _LOGGER.warning(f"Can't open {str(path)}")
-        return {}
+        if not (path := self._path / directory / f"{file}.json").exists():
+            _LOGGER.warning("Can't open %s", str(path))
+            return {}
+        with open(path, "r", encoding="utf-8") as json_file:
+            data: Dict[str, Any] = json.loads(json_file.read())
+        return data
 
     async def load_appliances(self) -> List[Dict[str, Any]]:
         result = []

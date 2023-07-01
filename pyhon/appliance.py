@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, TYPE_CHECKING, List
 
 from pyhon import diagnose, exceptions
+from pyhon.appliances.base import ApplianceBase
 from pyhon.attributes import HonAttribute
 from pyhon.command_loader import HonCommandLoader
 from pyhon.commands import HonCommand
@@ -40,7 +41,7 @@ class HonAppliance:
         self._default_setting = HonParameter("", {}, "")
 
         try:
-            self._extra = importlib.import_module(
+            self._extra: Optional[ApplianceBase] = importlib.import_module(
                 f"pyhon.appliances.{self.appliance_type.lower()}"
             ).Appliance(self)
         except ModuleNotFoundError:
@@ -71,7 +72,8 @@ class HonAppliance:
 
     def _check_name_zone(self, name: str, frontend: bool = True) -> str:
         zone = " Z" if frontend else "_z"
-        if (attribute := self._info.get(name, "")) and self._zone:
+        attribute: str = self._info.get(name, "")
+        if attribute and self._zone:
             return f"{attribute}{zone}{self._zone}"
         return attribute
 
@@ -112,9 +114,10 @@ class HonAppliance:
 
     @property
     def code(self) -> str:
-        if code := self.info.get("code"):
+        code: str = self.info.get("code", "")
+        if code:
             return code
-        serial_number = self.info.get("serialNumber", "")
+        serial_number: str = self.info.get("serialNumber", "")
         return serial_number[:8] if len(serial_number) < 18 else serial_number[:11]
 
     @property
@@ -198,7 +201,7 @@ class HonAppliance:
 
     @property
     def settings(self) -> Dict[str, Parameter]:
-        result = {}
+        result: Dict[str, Parameter] = {}
         for name, command in self._commands.items():
             for key in command.setting_keys:
                 setting = command.settings.get(key, self._default_setting)

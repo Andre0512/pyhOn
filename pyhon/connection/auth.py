@@ -6,7 +6,7 @@ import urllib
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 from urllib import parse
 from urllib.parse import quote
 
@@ -115,7 +115,8 @@ class HonAuth:
         async with self._request.get(url) as response:
             text = await response.text()
             self._expires = datetime.utcnow()
-            if not (login_url := re.findall("url = '(.+?)'", text)):
+            login_url: List[str] = re.findall("url = '(.+?)'", text)
+            if not login_url:
                 if "oauth/done#access_token=" in text:
                     self._parse_token_data(text)
                     raise exceptions.HonNoAuthenticationNeeded()
@@ -184,7 +185,8 @@ class HonAuth:
             if response.status == 200:
                 with suppress(json.JSONDecodeError, KeyError):
                     result = await response.json()
-                    return result["events"][0]["attributes"]["values"]["url"]
+                    url: str = result["events"][0]["attributes"]["values"]["url"]
+                    return url
             await self._error_logger(response)
             return ""
 
