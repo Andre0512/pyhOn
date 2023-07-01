@@ -28,7 +28,7 @@ class HonParameterProgram(HonParameterEnum):
         if value in self.values:
             self._command.category = value
         else:
-            raise ValueError(f"Allowed values {self.values}")
+            raise ValueError(f"Allowed values: {self.values} But was: {value}")
 
     @property
     def values(self) -> List[str]:

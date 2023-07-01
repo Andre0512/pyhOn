@@ -59,7 +59,7 @@ def pretty_print(
     return result
 
 
-def create_command(
+def create_commands(
     commands: Dict[str, "HonCommand"], concat: bool = False
 ) -> Dict[str, Any]:
     result: Dict[str, Any] = {}

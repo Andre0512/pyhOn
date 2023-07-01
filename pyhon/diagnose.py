@@ -89,12 +89,11 @@ def yaml_export(appliance: "HonAppliance", anonymous: bool = False) -> str:
     if anonymous:
         for sensible in ["serialNumber", "coords"]:
             data.get("appliance", {}).pop(sensible, None)
-    data = {
-        "data": data,
-        "commands": printer.create_command(appliance.commands),
-        "rules": printer.create_rules(appliance.commands),
-    }
-    result = printer.pretty_print(data)
+    result = printer.pretty_print({"data": data})
+    if commands := printer.create_commands(appliance.commands):
+        result += printer.pretty_print({"commands": commands})
+    if rules := printer.create_rules(appliance.commands):
+        result += printer.pretty_print({"rules": rules})
     if anonymous:
         result = anonymize_data(result)
     return result

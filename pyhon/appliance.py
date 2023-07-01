@@ -106,7 +106,7 @@ class HonAppliance:
     @property
     def nick_name(self) -> str:
         result = self._check_name_zone("nickName")
-        if not result or re.findall("^[xX\s]+$", result):
+        if not result or re.findall("^[xX1\\s]+$", result):
             return self.model_name
         return result
 
@@ -238,12 +238,12 @@ class HonAppliance:
         if not (command := self.commands.get(command_name)):
             return
         for key, value in self.attributes.get("parameters", {}).items():
-            if isinstance(value, str) and (new := command.parameters.get(key)):
+            if new := command.parameters.get(key):
                 self.attributes["parameters"][key].update(
                     str(new.intern_value), shield=True
                 )
 
-    def sync_command(self, main: str, target: Optional[List[str]] = None) -> None:
+    def sync_command(self, main: str, target: Optional[List[str] | str] = None) -> None:
         base: Optional[HonCommand] = self.commands.get(main)
         if not base:
             return

@@ -99,7 +99,7 @@ async def main() -> None:
                 print(printer.key_print(data))
                 print(
                     printer.pretty_print(
-                        printer.create_command(device.commands, concat=True)
+                        printer.create_commands(device.commands, concat=True)
                     )
                 )
             else:

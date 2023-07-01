@@ -41,4 +41,4 @@ class HonParameterEnum(HonParameter):
             self._value = value
             self.check_trigger(value)
         else:
-            raise ValueError(f"Allowed values {self._values}")
+            raise ValueError(f"Allowed values: {self._values} But was: {value}")
