@@ -170,9 +170,7 @@ class HonAppliance:
 
     async def load_attributes(self) -> None:
         attributes = await self.api.load_attributes(self)
-        for name, values in (
-            attributes.pop("shadow", {}).get("parameters", {}).items()
-        ):
+        for name, values in attributes.pop("shadow", {}).get("parameters", {}).items():
             if name in self._attributes.get("parameters", {}):
                 self._attributes["parameters"][name].update(values)
             else:
