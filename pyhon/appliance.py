@@ -109,7 +109,7 @@ class HonAppliance:
     @property
     def nick_name(self) -> str:
         result = self._check_name_zone("nickName")
-        if not result or re.findall("^[xX1\\s]+$", result):
+        if not result or re.findall("^[xX1\\s-]+$", result):
             return self.model_name
         return result
 
