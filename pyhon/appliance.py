@@ -11,6 +11,7 @@ from pyhon.attributes import HonAttribute
 from pyhon.command_loader import HonCommandLoader
 from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
+from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.range import HonParameterRange
 from pyhon.typedefs import Parameter
 
@@ -283,4 +284,6 @@ class HonAppliance:
                         parameter.max = int(base_value.value)
                         parameter.min = int(base_value.value)
                         parameter.step = 1
+                    elif isinstance(parameter, HonParameterEnum):
+                        parameter.values = base_value.values
                     parameter.value = base_value.value
