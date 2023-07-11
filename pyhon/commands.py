@@ -75,14 +75,14 @@ class HonCommand:
         for name, parameter in self._parameters.items():
             result.setdefault(parameter.group, {})[name] = parameter.intern_value
         return result
-    
+
     @property
     def mandatory_parameter_groups(self) -> Dict[str, Dict[str, Union[str, float]]]:
         result: Dict[str, Dict[str, Union[str, float]]] = {}
         for name, parameter in self._parameters.items():
             if parameter.mandatory:
                 result.setdefault(parameter.group, {})[name] = parameter.intern_value
-        return result    
+        return result
 
     @property
     def parameter_value(self) -> Dict[str, Union[str, float]]:
