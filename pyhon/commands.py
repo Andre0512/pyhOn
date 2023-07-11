@@ -82,7 +82,7 @@ class HonCommand:
         for name, parameter in self._parameters.items():
             if parameter.mandatory:
                 result.setdefault(parameter.group, {})[name] = parameter.intern_value
-        return result
+        return result    
 
     @property
     def parameter_value(self) -> Dict[str, Union[str, float]]:
@@ -120,7 +120,8 @@ class HonCommand:
             self._parameters[name] = HonParameterProgram(name, self, "custom")
 
     async def send(self, onlyMandatory: bool = False) -> bool:
-        grouped_params = self.mandatory_parameter_groups if onlyMandatory else self.parameter_groups
+        grouped_params = self.mandatory_parameter_groups \
+            if onlyMandatory else self.parameter_groups
         params = grouped_params.get("parameters", {})
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         ancillary_params.pop("programRules", None)
