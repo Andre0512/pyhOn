@@ -10,11 +10,18 @@ def clean_value(value: str | float) -> str:
 class HonParameterEnum(HonParameter):
     def __init__(self, key: str, attributes: Dict[str, Any], group: str) -> None:
         super().__init__(key, attributes, group)
-        self._default = attributes.get("defaultValue")
-        self._value = self._default or "0"
-        self._values: List[str] = attributes.get("enumValues", [])
+        self._default = ""
+        self._value = ""
+        self._values: List[str] = []
+        self._set_attributes()
         if self._default and clean_value(self._default.strip("[]")) not in self.values:
             self._values.append(self._default)
+
+    def _set_attributes(self):
+        super()._set_attributes()
+        self._default = self._attributes.get("defaultValue")
+        self._value = self._default or "0"
+        self._values: List[str] = self._attributes.get("enumValues", [])
 
     def __repr__(self) -> str:
         return f"{self.__class__} (<{self.key}> {self.values})"

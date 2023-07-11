@@ -169,3 +169,7 @@ class HonCommand:
                 else:
                     result[name] = parameter
         return result
+
+    def reset(self):
+        for parameter in self._parameters.values():
+            parameter.reset()

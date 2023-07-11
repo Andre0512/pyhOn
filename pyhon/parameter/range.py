@@ -7,10 +7,19 @@ from pyhon.parameter.base import HonParameter
 class HonParameterRange(HonParameter):
     def __init__(self, key: str, attributes: Dict[str, Any], group: str) -> None:
         super().__init__(key, attributes, group)
-        self._min: float = str_to_float(attributes["minimumValue"])
-        self._max: float = str_to_float(attributes["maximumValue"])
-        self._step: float = str_to_float(attributes["incrementValue"])
-        self._default: float = str_to_float(attributes.get("defaultValue", self.min))
+        self._min: float = 0
+        self._max: float = 0
+        self._step: float = 0
+        self._default: float = 0
+        self._value: float = 0
+        self._set_attributes()
+
+    def _set_attributes(self):
+        super()._set_attributes()
+        self._min: float = str_to_float(self._attributes["minimumValue"])
+        self._max: float = str_to_float(self._attributes["maximumValue"])
+        self._step: float = str_to_float(self._attributes["incrementValue"])
+        self._default: float = str_to_float(self._attributes.get("defaultValue", self.min))
         self._value: float = self._default
 
     def __repr__(self) -> str:
