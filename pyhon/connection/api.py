@@ -267,8 +267,13 @@ class TestAPI(HonAPI):
             _LOGGER.warning("Can't open %s", str(path))
             return {}
         with open(path, "r", encoding="utf-8") as json_file:
-            data: Dict[str, Any] = json.loads(json_file.read())
-        return data
+            text = json_file.read()
+        try:
+            data: Dict[str, Any] = json.loads(text)
+            return data
+        except json.decoder.JSONDecodeError as error:
+            _LOGGER.error("%s - %s", str(path), error)
+            return {}
 
     async def load_appliances(self) -> List[Dict[str, Any]]:
         result = []

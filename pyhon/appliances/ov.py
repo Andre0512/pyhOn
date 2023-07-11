@@ -14,11 +14,4 @@ class Appliance(ApplianceBase):
             data["parameters"]["remainingTimeMM"].value = "0"
 
         data["active"] = data["parameters"]["onOffStatus"] == "1"
-
-        if program := int(data["parameters"]["prCode"].value):
-            if (setting := self.parent.settings["startProgram.program"]) and isinstance(
-                setting, HonParameterProgram
-            ):
-                data["programName"] = setting.ids.get(program, "")
-
         return data
