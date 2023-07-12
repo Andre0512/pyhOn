@@ -37,7 +37,7 @@ class HonParameterProgram(HonParameterEnum):
 
     @values.setter
     def values(self, values: List[str]) -> None:
-        return
+        raise ValueError("Cant set values {values}")
 
     @property
     def ids(self) -> Dict[int, str]:

@@ -1,7 +1,6 @@
 from typing import Any, Dict
 
 from pyhon.appliances.base import ApplianceBase
-from pyhon.parameter.program import HonParameterProgram
 
 
 class Appliance(ApplianceBase):

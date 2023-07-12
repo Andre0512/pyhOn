@@ -1,8 +1,8 @@
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, _AsyncGeneratorContextManager
 from types import TracebackType
-from typing import Optional, Dict, Type, Any, Protocol
+from typing import Optional, Dict, Type, Any, Callable, Coroutine, AsyncGenerator
 
 import aiohttp
 from typing_extensions import Self
@@ -47,10 +47,11 @@ class ConnectionHandler:
         return self
 
     @asynccontextmanager
-    def _intercept(
+    async def _intercept(
         self, method: Callback, url: str | URL, *args: Any, **kwargs: Dict[str, Any]
     ) -> AsyncIterator[aiohttp.ClientResponse]:
-        raise NotImplementedError
+        async with method(url, *args, **kwargs) as response:
+            yield response
 
     @asynccontextmanager
     async def get(

@@ -18,7 +18,7 @@ class HonParameter:
         ] = {}
         self._set_attributes()
 
-    def _set_attributes(self):
+    def _set_attributes(self) -> None:
         self._category = self._attributes.get("category", "")
         self._typology = self._attributes.get("typology", "")
         self._mandatory = self._attributes.get("mandatory", 0)
@@ -61,7 +61,7 @@ class HonParameter:
         return self._group
 
     def add_trigger(
-            self, value: str, func: Callable[["HonRule"], None], data: "HonRule"
+        self, value: str, func: Callable[["HonRule"], None], data: "HonRule"
     ) -> None:
         if self._value == value:
             func(data)
@@ -93,5 +93,5 @@ class HonParameter:
 
         return result
 
-    def reset(self):
+    def reset(self) -> None:
         self._set_attributes()
