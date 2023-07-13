@@ -124,6 +124,18 @@ class HonCommand:
             self.mandatory_parameter_groups if onlyMandatory else self.parameter_groups
         )
         params = grouped_params.get("parameters", {})
+        return await self.send_parameters(params)
+
+    async def send_specific(self, param_names: List[str]) -> bool:
+        params: Dict[str, str | float] = {}
+
+        for key, parameter in self._parameters:
+            if key in param_names:
+                params[key] = parameter.value
+
+        return await self.send_parameters(params)
+
+    async def send_parameters(self, params: Dict[str, str | float]) -> bool:
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         ancillary_params.pop("programRules", None)
         self.appliance.sync_command_to_params(self.name)
