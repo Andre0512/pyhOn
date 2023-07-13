@@ -1,8 +1,8 @@
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager, _AsyncGeneratorContextManager
+from contextlib import asynccontextmanager
 from types import TracebackType
-from typing import Optional, Dict, Type, Any, Callable, Coroutine, AsyncGenerator
+from typing import Optional, Dict, Type, Any
 
 import aiohttp
 from typing_extensions import Self

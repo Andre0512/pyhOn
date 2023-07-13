@@ -1,4 +1,4 @@
-from typing import Union, Any, TYPE_CHECKING, Protocol, AsyncIterator, Coroutine
+from typing import Union, Any, TYPE_CHECKING, Protocol
 
 import aiohttp
 from yarl import URL
