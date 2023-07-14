@@ -34,9 +34,9 @@ jobs:
     - name: Type check with mypy
       run: |
         mypy pyhon/
-    # - name: Analysing the code with pylint
-    #   run: |
-    #     pylint --max-line-length 88 $(git ls-files '*.py')
+    - name: Analysing the code with pylint
+      run: |
+        pylint  $(git ls-files '*.py')
     - name: Check black style
       run: |
         black . --check

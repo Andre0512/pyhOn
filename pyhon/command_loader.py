@@ -1,14 +1,15 @@
 import asyncio
 from contextlib import suppress
 from copy import copy
-from typing import Dict, Any, Optional, TYPE_CHECKING, List, Collection
+from typing import Dict, Any, Optional, TYPE_CHECKING, List
 
 from pyhon.commands import HonCommand
+from pyhon.exceptions import NoAuthenticationException
 from pyhon.parameter.fixed import HonParameterFixed
 from pyhon.parameter.program import HonParameterProgram
 
 if TYPE_CHECKING:
-    from pyhon import HonAPI, exceptions
+    from pyhon import HonAPI
     from pyhon.appliance import HonAppliance
 
 
@@ -29,7 +30,7 @@ class HonCommandLoader:
     def api(self) -> "HonAPI":
         """api connection object"""
         if self._api is None:
-            raise exceptions.NoAuthenticationException("Missing hOn login")
+            raise NoAuthenticationException("Missing hOn login")
         return self._api
 
     @property

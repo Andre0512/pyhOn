@@ -7,14 +7,21 @@ if TYPE_CHECKING:
 class HonParameter:
     def __init__(self, key: str, attributes: Dict[str, Any], group: str) -> None:
         self._key = key
-        self._category: str = attributes.get("category", "")
-        self._typology: str = attributes.get("typology", "")
-        self._mandatory: int = attributes.get("mandatory", 0)
+        self._attributes = attributes
+        self._category: str = ""
+        self._typology: str = ""
+        self._mandatory: int = 0
         self._value: str | float = ""
         self._group: str = group
         self._triggers: Dict[
             str, List[Tuple[Callable[["HonRule"], None], "HonRule"]]
         ] = {}
+        self._set_attributes()
+
+    def _set_attributes(self) -> None:
+        self._category = self._attributes.get("category", "")
+        self._typology = self._attributes.get("typology", "")
+        self._mandatory = self._attributes.get("mandatory", 0)
 
     @property
     def key(self) -> str:
@@ -85,3 +92,6 @@ class HonParameter:
                     param[rule.param_key] = rule.param_data.get("defaultValue", "")
 
         return result
+
+    def reset(self) -> None:
+        self._set_attributes()

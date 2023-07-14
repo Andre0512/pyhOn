@@ -95,11 +95,11 @@ class HonConnectionHandler(ConnectionHandler):
                 try:
                     await response.json()
                     yield response
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as exc:
                     _LOGGER.warning(
                         "%s - JsonDecodeError %s - %s",
                         response.request_info.url,
                         response.status,
                         await response.text(),
                     )
-                    raise HonAuthenticationError("Decode Error")
+                    raise HonAuthenticationError("Decode Error") from exc

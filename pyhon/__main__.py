@@ -30,13 +30,13 @@ def get_arguments() -> Dict[str, Any]:
     export.add_argument("--zip", help="create zip archive", action="store_true")
     export.add_argument("--anonymous", help="anonymize data", action="store_true")
     export.add_argument("directory", nargs="?", default=Path().cwd())
-    translate = subparser.add_parser(
+    translation = subparser.add_parser(
         "translate", help="print available translation keys"
     )
-    translate.add_argument(
+    translation.add_argument(
         "translate", help="language (de, en, fr...)", metavar="LANGUAGE"
     )
-    translate.add_argument("--json", help="print as json", action="store_true")
+    translation.add_argument("--json", help="print as json", action="store_true")
     parser.add_argument(
         "-i", "--import", help="import pyhon data", nargs="?", default=Path().cwd()
     )

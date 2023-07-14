@@ -21,7 +21,7 @@ class HonDevice:
         return self._os_version
 
     @property
-    def os(self) -> str:
+    def os_type(self) -> str:
         return self._os
 
     @property
@@ -36,7 +36,7 @@ class HonDevice:
         result: Dict[str, str | int] = {
             "appVersion": self.app_version,
             "mobileId": self.mobile_id,
-            "os": self.os,
+            "os": self.os_type,
             "osVersion": self.os_version,
             "deviceModel": self.device_model,
         }
