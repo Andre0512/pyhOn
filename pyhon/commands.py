@@ -128,11 +128,9 @@ class HonCommand:
 
     async def send_specific(self, param_names: List[str]) -> bool:
         params: Dict[str, str | float] = {}
-
-        for key, parameter in self._parameters:
+        for key, parameter in self._parameters.items():
             if key in param_names:
                 params[key] = parameter.value
-
         return await self.send_parameters(params)
 
     async def send_parameters(self, params: Dict[str, str | float]) -> bool:
