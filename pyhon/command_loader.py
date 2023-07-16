@@ -17,12 +17,12 @@ class HonCommandLoader:
     """Loads and parses hOn command data"""
 
     def __init__(self, api: "HonAPI", appliance: "HonAppliance") -> None:
+        self._api: "HonAPI" = api
+        self._appliance: "HonAppliance" = appliance
         self._api_commands: Dict[str, Any] = {}
         self._favourites: List[Dict[str, Any]] = []
         self._command_history: List[Dict[str, Any]] = []
         self._commands: Dict[str, HonCommand] = {}
-        self._api: "HonAPI" = api
-        self._appliance: "HonAppliance" = appliance
         self._appliance_data: Dict[str, Any] = {}
         self._additional_data: Dict[str, Any] = {}
 

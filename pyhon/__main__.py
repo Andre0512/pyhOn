@@ -11,6 +11,7 @@ from typing import Tuple, Dict, Any
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# pylint: disable=wrong-import-position
 from pyhon import Hon, HonAPI, diagnose, printer
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,11 +92,9 @@ async def main() -> None:
                 data = device.data.copy()
                 attr = "get" if args.get("all") else "pop"
                 print(
-                    printer.key_print(
-                        data["attributes"].__getattribute__(attr)("parameters")
-                    )
+                    printer.key_print(getattr(data["attributes"], attr)("parameters"))
                 )
-                print(printer.key_print(data.__getattribute__(attr)("appliance")))
+                print(printer.key_print(getattr(data, attr)("appliance")))
                 print(printer.key_print(data))
                 print(
                     printer.pretty_print(

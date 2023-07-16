@@ -1,7 +1,9 @@
 [MESSAGES CONTROL]
 
-disable=C,R
+disable=missing-docstring
 
 [FORMAT]
 
+max-args=6
+max-attributes=8
 max-line-length=88

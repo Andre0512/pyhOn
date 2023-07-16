@@ -25,6 +25,10 @@ class HonRuleSet:
         self._rules: Dict[str, List[HonRule]] = {}
         self._parse_rule(rule)
 
+    @property
+    def rules(self) -> Dict[str, List[HonRule]]:
+        return self._rules
+
     def _parse_rule(self, rule: Dict[str, Any]) -> None:
         for param_key, params in rule.items():
             param_key = self._command.appliance.options.get(param_key, param_key)

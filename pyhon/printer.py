@@ -30,7 +30,7 @@ def pretty_print(
 ) -> str:
     result = ""
     space = whitespace * intend
-    if (isinstance(data, list) or isinstance(data, dict)) and key:
+    if isinstance(data, (dict, list)) and key:
         result += f"{space}{'- ' if is_list else ''}{key}:\n"
         intend += 1
     if isinstance(data, list):
@@ -39,10 +39,10 @@ def pretty_print(
                 value, intend=intend, is_list=True, whitespace=whitespace
             )
     elif isinstance(data, dict):
-        for i, (key, value) in enumerate(sorted(data.items())):
+        for i, (list_key, value) in enumerate(sorted(data.items())):
             result += pretty_print(
                 value,
-                key=key,
+                key=list_key,
                 intend=intend + (is_list if i else 0),
                 is_list=is_list and not i,
                 whitespace=whitespace,

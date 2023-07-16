@@ -27,17 +27,16 @@ class HonCommand:
         categories: Optional[Dict[str, "HonCommand"]] = None,
         category_name: str = "",
     ):
+        self._name: str = name
         self._api: Optional[HonAPI] = appliance.api
         self._appliance: "HonAppliance" = appliance
-        self._name: str = name
         self._categories: Optional[Dict[str, "HonCommand"]] = categories
         self._category_name: str = category_name
-        self._description: str = attributes.pop("description", "")
-        self._protocol_type: str = attributes.pop("protocolType", "")
-        self._parameters: Dict[str, HonParameter] = {}
+        self._parameters: Dict[str, Parameter] = {}
         self._data: Dict[str, Any] = {}
-        self._available_settings: Dict[str, HonParameter] = {}
         self._rules: List[HonRuleSet] = []
+        attributes.pop("description", "")
+        attributes.pop("protocolType", "")
         self._load_parameters(attributes)
 
     def __repr__(self) -> str:

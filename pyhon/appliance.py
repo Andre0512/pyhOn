@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
 class HonAppliance:
     _MINIMAL_UPDATE_INTERVAL = 5  # seconds
 

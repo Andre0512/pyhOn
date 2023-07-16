@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from pyhon.parameter.range import HonParameterRange
 
 
-class Callback(Protocol):
+class Callback(Protocol):  # pylint: disable=too-few-public-methods
     def __call__(
         self, url: str | URL, *args: Any, **kwargs: Any
     ) -> aiohttp.client._RequestContextManager:
