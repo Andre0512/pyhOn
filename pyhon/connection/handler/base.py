@@ -60,7 +60,8 @@ class ConnectionHandler:
         if self._session is None:
             raise exceptions.NoSessionException()
         response: aiohttp.ClientResponse
-        async with self._intercept(self._session.get, *args, **kwargs) as response:  # type: ignore[arg-type]
+        args = self._session.get, *args
+        async with self._intercept(*args, **kwargs) as response:
             yield response
 
     @asynccontextmanager
@@ -70,7 +71,8 @@ class ConnectionHandler:
         if self._session is None:
             raise exceptions.NoSessionException()
         response: aiohttp.ClientResponse
-        async with self._intercept(self._session.post, *args, **kwargs) as response:  # type: ignore[arg-type]
+        args = self._session.post, *args
+        async with self._intercept(*args, **kwargs) as response:
             yield response
 
     async def close(self) -> None:

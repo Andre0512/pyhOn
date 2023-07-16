@@ -64,9 +64,8 @@ class HonParameterRange(HonParameter):
             self._value = value
             self.check_trigger(value)
         else:
-            raise ValueError(
-                f"Allowed: min {self.min} max {self.max} step {self.step} But was: {value}"
-            )
+            allowed = f"min {self.min} max {self.max} step {self.step}"
+            raise ValueError(f"Allowed: {allowed} But was: {value}")
 
     @property
     def values(self) -> List[str]:

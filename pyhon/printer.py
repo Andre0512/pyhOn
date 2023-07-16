@@ -29,33 +29,26 @@ def pretty_print(
     whitespace: str = "  ",
 ) -> str:
     result = ""
+    space = whitespace * intend
+    if (isinstance(data, list) or isinstance(data, dict)) and key:
+        result += f"{space}{'- ' if is_list else ''}{key}:\n"
+        intend += 1
     if isinstance(data, list):
-        if key:
-            result += f"{whitespace * intend}{'- ' if is_list else ''}{key}:\n"
-            intend += 1
         for i, value in enumerate(data):
             result += pretty_print(
                 value, intend=intend, is_list=True, whitespace=whitespace
             )
     elif isinstance(data, dict):
-        if key:
-            result += f"{whitespace * intend}{'- ' if is_list else ''}{key}:\n"
-            intend += 1
         for i, (key, value) in enumerate(sorted(data.items())):
-            if is_list and not i:
-                result += pretty_print(
-                    value, key=key, intend=intend, is_list=True, whitespace=whitespace
-                )
-            elif is_list:
-                result += pretty_print(
-                    value, key=key, intend=intend + 1, whitespace=whitespace
-                )
-            else:
-                result += pretty_print(
-                    value, key=key, intend=intend, whitespace=whitespace
-                )
+            result += pretty_print(
+                value,
+                key=key,
+                intend=intend + (is_list if i else 0),
+                is_list=is_list and not i,
+                whitespace=whitespace,
+            )
     else:
-        result += f"{whitespace * intend}{'- ' if is_list else ''}{key}{': ' if key else ''}{data}\n"
+        result += f"{space}{'- ' if is_list else ''}{key}{': ' if key else ''}{data}\n"
     return result
 
 

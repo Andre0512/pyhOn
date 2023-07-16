@@ -188,12 +188,8 @@ class HonAppliance:
 
     async def update(self, force: bool = False) -> None:
         now = datetime.now()
-        if (
-            force
-            or not self._last_update
-            or self._last_update
-            < now - timedelta(seconds=self._MINIMAL_UPDATE_INTERVAL)
-        ):
+        min_age = now - timedelta(seconds=self._MINIMAL_UPDATE_INTERVAL)
+        if force or not self._last_update or self._last_update < min_age:
             self._last_update = now
             await self.load_attributes()
             self.sync_params_to_command("settings")
@@ -272,18 +268,23 @@ class HonAppliance:
         for command, data in self.commands.items():
             if command == main or target and command not in target:
                 continue
-            for name, parameter in data.parameters.items():
-                if base_value := base.parameters.get(name):
-                    if isinstance(base_value, HonParameterRange) and isinstance(
-                        parameter, HonParameterRange
-                    ):
-                        parameter.max = base_value.max
-                        parameter.min = base_value.min
-                        parameter.step = base_value.step
-                    elif isinstance(parameter, HonParameterRange):
-                        parameter.max = int(base_value.value)
-                        parameter.min = int(base_value.value)
-                        parameter.step = 1
-                    elif isinstance(parameter, HonParameterEnum):
-                        parameter.values = base_value.values
-                    parameter.value = base_value.value
+
+            for name, target_param in data.parameters.items():
+                if not (base_param := base.parameters.get(name)):
+                    return
+                self.sync_parameter(base_param, target_param)
+
+    def sync_parameter(self, main: Parameter, target: Parameter) -> None:
+        if isinstance(main, HonParameterRange) and isinstance(
+            target, HonParameterRange
+        ):
+            target.max = main.max
+            target.min = main.min
+            target.step = main.step
+        elif isinstance(target, HonParameterRange):
+            target.max = int(main.value)
+            target.min = int(main.value)
+            target.step = 1
+        elif isinstance(target, HonParameterEnum):
+            target.values = main.values
+        target.value = main.value

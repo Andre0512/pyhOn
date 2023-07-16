@@ -3,6 +3,7 @@ from typing import List, Dict, TYPE_CHECKING, Any, Optional
 
 from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.range import HonParameterRange
+from pyhon.typedefs import Parameter
 
 if TYPE_CHECKING:
     from pyhon.commands import HonCommand
@@ -83,28 +84,42 @@ class HonRuleSet:
             for rule in rules:
                 self._rules.setdefault(key, []).append(rule)
 
+    def _extra_rules_matches(self, rule: HonRule) -> bool:
+        if rule.extras:
+            for key, value in rule.extras.items():
+                if not self._command.parameters.get(key):
+                    return False
+                if str(self._command.parameters.get(key)) != str(value):
+                    return False
+        return True
+
+    def _apply_fixed(self, param: Parameter, value: str | float) -> None:
+        if isinstance(param, HonParameterEnum) and set(param.values) != {str(value)}:
+            param.values = [str(value)]
+            param.value = str(value)
+        elif isinstance(param, HonParameterRange):
+            param.value = float(value)
+            return
+        param.value = str(value)
+
+    def _apply_enum(self, param: Parameter, rule: HonRule) -> None:
+        if not isinstance(param, HonParameterEnum):
+            return
+        if enum_values := rule.param_data.get("enumValues"):
+            param.values = enum_values.split("|")
+        if default_value := rule.param_data.get("defaultValue"):
+            param.value = default_value
+
     def _add_trigger(self, parameter: "HonParameter", data: HonRule) -> None:
         def apply(rule: HonRule) -> None:
-            if rule.extras is not None:
-                for key, value in rule.extras.items():
-                    if str(self._command.parameters.get(key)) != str(value):
-                        return
-            if param := self._command.parameters.get(rule.param_key):
-                if value := rule.param_data.get("fixedValue", ""):
-                    if isinstance(param, HonParameterEnum) and set(param.values) != {
-                        str(value)
-                    }:
-                        param.values = [str(value)]
-                    elif isinstance(param, HonParameterRange):
-                        param.value = float(value)
-                        return
-                    param.value = str(value)
-                elif rule.param_data.get("typology") == "enum":
-                    if isinstance(param, HonParameterEnum):
-                        if enum_values := rule.param_data.get("enumValues"):
-                            param.values = enum_values.split("|")
-                        if default_value := rule.param_data.get("defaultValue"):
-                            param.value = default_value
+            if not self._extra_rules_matches(rule):
+                return
+            if not (param := self._command.parameters.get(rule.param_key)):
+                return
+            if fixed_value := rule.param_data.get("fixedValue", ""):
+                self._apply_fixed(param, fixed_value)
+            elif rule.param_data.get("typology") == "enum":
+                self._apply_enum(param, rule)
 
         parameter.add_trigger(data.trigger_value, apply, data)
 

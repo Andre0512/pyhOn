@@ -41,13 +41,15 @@ class HonParameterProgram(HonParameterEnum):
 
     @property
     def ids(self) -> Dict[int, str]:
-        values = {
-            int(p.parameters["prCode"].value): n
-            for i, (n, p) in enumerate(self._programs.items())
-            if "iot_" not in n
-            and p.parameters.get("prCode")
-            and not ((fav := p.parameters.get("favourite")) and fav.value == "1")
-        }
+        values: Dict[int, str] = {}
+        for name, parameter in self._programs.items():
+            if "iot_" in name:
+                continue
+            if parameter.parameters.get("prCode"):
+                continue
+            if (fav := parameter.parameters.get("favourite")) and fav.value == "1":
+                continue
+            values[int(parameter.parameters["prCode"].value)] = name
         return dict(sorted(values.items()))
 
     def set_value(self, value: str) -> None:
