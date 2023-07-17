@@ -119,9 +119,9 @@ class HonCommand:
             name = "program" if "PROGRAM" in self._category_name else "category"
             self._parameters[name] = HonParameterProgram(name, self, "custom")
 
-    async def send(self, onlyMandatory: bool = False) -> bool:
+    async def send(self, only_mandatory: bool = False) -> bool:
         grouped_params = (
-            self.mandatory_parameter_groups if onlyMandatory else self.parameter_groups
+            self.mandatory_parameter_groups if only_mandatory else self.parameter_groups
         )
         params = grouped_params.get("parameters", {})
         return await self.send_parameters(params)
