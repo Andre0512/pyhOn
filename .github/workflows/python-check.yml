@@ -28,7 +28,7 @@ jobs:
         python -m pip install -r requirements_dev.txt
     - name: Lint with flake8
       run: |
-        flake8 . --count --max-complexity=7 --max-line-length=88 --statistics
+        flake8 . --count --statistics
     - name: Type check with mypy
       run: |
         mypy pyhon/

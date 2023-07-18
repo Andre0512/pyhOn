@@ -28,7 +28,7 @@ class HonCommand:
         category_name: str = "",
     ):
         self._name: str = name
-        self._api: Optional[HonAPI] = appliance.api
+        self._api: Optional[HonAPI] = None
         self._appliance: "HonAppliance" = appliance
         self._categories: Optional[Dict[str, "HonCommand"]] = categories
         self._category_name: str = category_name
@@ -48,6 +48,8 @@ class HonCommand:
 
     @property
     def api(self) -> "HonAPI":
+        if self._api is None and self._appliance:
+            self._api = self._appliance.api
         if self._api is None:
             raise exceptions.NoAuthenticationException("Missing hOn login")
         return self._api

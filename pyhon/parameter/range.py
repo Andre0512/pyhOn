@@ -16,9 +16,9 @@ class HonParameterRange(HonParameter):
 
     def _set_attributes(self) -> None:
         super()._set_attributes()
-        self._min = str_to_float(self._attributes["minimumValue"])
-        self._max = str_to_float(self._attributes["maximumValue"])
-        self._step = str_to_float(self._attributes["incrementValue"])
+        self._min = str_to_float(self._attributes.get("minimumValue", 0))
+        self._max = str_to_float(self._attributes.get("maximumValue", 0))
+        self._step = str_to_float(self._attributes.get("incrementValue", 0))
         self._default = str_to_float(self._attributes.get("defaultValue", self.min))
         self._value = self._default
 
