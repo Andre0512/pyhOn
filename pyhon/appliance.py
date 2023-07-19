@@ -250,7 +250,9 @@ class HonAppliance:
         if not (command := self.commands.get(command_name)):
             return
         for key in command.setting_keys:
-            if (new := self.attributes.get("parameters", {}).get(key)) is None:
+            if (
+                new := self.attributes.get("parameters", {}).get(key)
+            ) is None or new.value == "":
                 continue
             setting = command.settings[key]
             try:
