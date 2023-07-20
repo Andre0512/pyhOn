@@ -49,17 +49,20 @@ class HonAppliance:
         except ModuleNotFoundError:
             self._extra = None
 
+    def _get_nested_item(self, item: str) -> Any:
+        result: List[Any] | Dict[str, Any] = self.data
+        for key in item.split("."):
+            if all(k in "0123456789" for k in key) and isinstance(result, list):
+                result = result[int(key)]
+            elif isinstance(result, dict):
+                result = result[key]
+        return result
+
     def __getitem__(self, item: str) -> Any:
         if self._zone:
             item += f"Z{self._zone}"
         if "." in item:
-            result = self.data
-            for key in item.split("."):
-                if all(k in "0123456789" for k in key) and isinstance(result, list):
-                    result = result[int(key)]
-                else:
-                    result = result[key]
-            return result
+            return self._get_nested_item(item)
         if item in self.data:
             return self.data[item]
         if item in self.attributes["parameters"]:
