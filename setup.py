@@ -21,7 +21,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=["aiohttp==3.8.4", "typing-extensions==4.7.1"],
+    install_requires=["aiohttp==3.8.5", "typing-extensions==4.7.1"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
