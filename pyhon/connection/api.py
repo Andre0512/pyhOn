@@ -278,10 +278,12 @@ class TestAPI(HonAPI):
     async def load_appliances(self) -> List[Dict[str, Any]]:
         result = []
         for appliance in self._path.glob("*/"):
-            with open(
-                appliance / "appliance_data.json", "r", encoding="utf-8"
-            ) as json_file:
-                result.append(json.loads(json_file.read()))
+            file = appliance / "appliance_data.json"
+            with open(file, "r", encoding="utf-8") as json_file:
+                try:
+                    result.append(json.loads(json_file.read()))
+                except json.decoder.JSONDecodeError as error:
+                    _LOGGER.error("%s - %s", str(file), error)
         return result
 
     async def load_commands(self, appliance: HonAppliance) -> Dict[str, Any]:
@@ -318,4 +320,5 @@ class TestAPI(HonAPI):
         parameters: Dict[str, Any],
         ancillary_parameters: Dict[str, Any],
     ) -> bool:
+        _LOGGER.info("%s - %s", str(parameters), str(ancillary_parameters))
         return True
