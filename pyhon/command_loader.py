@@ -187,18 +187,19 @@ class HonCommandLoader:
             command = favourite.get("command", {})
             command_name = command.get("commandName", "")
             program_name = self._clean_name(command.get("programName", ""))
-            base: HonCommand = copy(
-                self.commands[command_name].categories[program_name]
-            )
+            if not (base := self.commands[command_name].categories.get(program_name)):
+                continue
+            base_command: HonCommand = copy(base)
             for data in command.values():
                 if isinstance(data, str):
                     continue
                 for key, value in data.items():
-                    if parameter := base.parameters.get(key):
+                    if parameter := base_command.parameters.get(key):
                         with suppress(ValueError):
                             parameter.value = value
             extra_param = HonParameterFixed("favourite", {"fixedValue": "1"}, "custom")
-            base.parameters.update(favourite=extra_param)
-            if isinstance(program := base.parameters["program"], HonParameterProgram):
+            base_command.parameters.update(favourite=extra_param)
+            program = base_command.parameters["program"]
+            if isinstance(program, HonParameterProgram):
                 program.set_value(name)
-            self.commands[command_name].categories[name] = base
+            self.commands[command_name].categories[name] = base_command
