@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="pyhOn",
-    version="0.15.2",
+    version="0.15.3",
     author="Andre Basche",
     description="Control hOn devices with python",
     long_description=long_description,
@@ -20,7 +20,7 @@ setup(
     platforms="any",
     packages=find_packages(),
     include_package_data=True,
-    package_data={"pyhOn": ["py.typed"]},
+    package_data={"pyhon": ["py.typed"]},
     python_requires=">=3.10",
     install_requires=["aiohttp==3.8.5", "typing-extensions==4.7.1"],
     classifiers=[
