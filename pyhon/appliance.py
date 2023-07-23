@@ -3,7 +3,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any, TYPE_CHECKING, List
+from typing import Optional, Dict, Any, TYPE_CHECKING, List, TypeVar, overload
 
 from pyhon import diagnose, exceptions
 from pyhon.appliances.base import ApplianceBase
@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     from pyhon import HonAPI
 
 _LOGGER = logging.getLogger(__name__)
+
+T = TypeVar('T')
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -69,7 +71,15 @@ class HonAppliance:
             return self.attributes["parameters"][item].value
         return self.info[item]
 
-    def get(self, item: str, default: Any = None) -> Any:
+    @overload
+    def get(self, item: str, default: None = None) -> Any:
+        ...
+
+    @overload
+    def get(self, item: str, default: T) -> T:
+        ...
+
+    def get(self, item: str, default: Optional[T] = None) -> Any:
         try:
             return self[item]
         except (KeyError, IndexError):
