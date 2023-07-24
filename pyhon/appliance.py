@@ -277,7 +277,13 @@ class HonAppliance:
                 _LOGGER.info("Can't set %s - %s", key, error)
                 continue
 
-    def sync_command(self, main: str, target: Optional[List[str] | str] = None) -> None:
+    def sync_command(
+        self,
+        main: str,
+        target: Optional[List[str] | str] = None,
+        mandatory_only: bool = False,
+        target_parameters: Optional[List[str]] = None,
+    ) -> None:
         base: Optional[HonCommand] = self.commands.get(main)
         if not base:
             return
@@ -288,6 +294,13 @@ class HonAppliance:
             for name, target_param in data.parameters.items():
                 if not (base_param := base.parameters.get(name)):
                     continue
+
+                if mandatory_only and not target_param.mandatory:
+                    continue
+
+                if target_parameters and name not in target_parameters:
+                    continue
+
                 self.sync_parameter(base_param, target_param)
 
     def sync_parameter(self, main: Parameter, target: Parameter) -> None:
