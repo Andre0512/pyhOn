@@ -295,7 +295,7 @@ class HonAppliance:
                     continue
                 if to_sync and (
                     (isinstance(to_sync, list) and name not in to_sync)
-                    or not target_param.mandatory
+                    or not base_param.mandatory
                 ):
                     continue
                 self.sync_parameter(base_param, target_param)
