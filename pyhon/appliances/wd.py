@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from typing import Dict, Any
 
 from pyhon.appliances.base import ApplianceBase

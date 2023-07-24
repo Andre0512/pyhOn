@@ -3,7 +3,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any, TYPE_CHECKING, List
+from typing import Optional, Dict, Any, TYPE_CHECKING, List, TypeVar, overload
 
 from pyhon import diagnose, exceptions
 from pyhon.appliances.base import ApplianceBase
@@ -20,7 +20,10 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+T = TypeVar("T")
 
+
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
 class HonAppliance:
     _MINIMAL_UPDATE_INTERVAL = 5  # seconds
 
@@ -48,24 +51,35 @@ class HonAppliance:
         except ModuleNotFoundError:
             self._extra = None
 
+    def _get_nested_item(self, item: str) -> Any:
+        result: List[Any] | Dict[str, Any] = self.data
+        for key in item.split("."):
+            if all(k in "0123456789" for k in key) and isinstance(result, list):
+                result = result[int(key)]
+            elif isinstance(result, dict):
+                result = result[key]
+        return result
+
     def __getitem__(self, item: str) -> Any:
         if self._zone:
             item += f"Z{self._zone}"
         if "." in item:
-            result = self.data
-            for key in item.split("."):
-                if all(k in "0123456789" for k in key) and isinstance(result, list):
-                    result = result[int(key)]
-                else:
-                    result = result[key]
-            return result
+            return self._get_nested_item(item)
         if item in self.data:
             return self.data[item]
         if item in self.attributes["parameters"]:
             return self.attributes["parameters"][item].value
         return self.info[item]
 
-    def get(self, item: str, default: Any = None) -> Any:
+    @overload
+    def get(self, item: str, default: None = None) -> Any:
+        ...
+
+    @overload
+    def get(self, item: str, default: T) -> T:
+        ...
+
+    def get(self, item: str, default: Optional[T] = None) -> Any:
         try:
             return self[item]
         except (KeyError, IndexError):
@@ -188,12 +202,8 @@ class HonAppliance:
 
     async def update(self, force: bool = False) -> None:
         now = datetime.now()
-        if (
-            force
-            or not self._last_update
-            or self._last_update
-            < now - timedelta(seconds=self._MINIMAL_UPDATE_INTERVAL)
-        ):
+        min_age = now - timedelta(seconds=self._MINIMAL_UPDATE_INTERVAL)
+        if force or not self._last_update or self._last_update < min_age:
             self._last_update = now
             await self.load_attributes()
             self.sync_params_to_command("settings")
@@ -253,7 +263,9 @@ class HonAppliance:
         if not (command := self.commands.get(command_name)):
             return
         for key in command.setting_keys:
-            if (new := self.attributes.get("parameters", {}).get(key)) is None:
+            if (
+                new := self.attributes.get("parameters", {}).get(key)
+            ) is None or new.value == "":
                 continue
             setting = command.settings[key]
             try:
@@ -272,18 +284,23 @@ class HonAppliance:
         for command, data in self.commands.items():
             if command == main or target and command not in target:
                 continue
-            for name, parameter in data.parameters.items():
-                if base_value := base.parameters.get(name):
-                    if isinstance(base_value, HonParameterRange) and isinstance(
-                        parameter, HonParameterRange
-                    ):
-                        parameter.max = base_value.max
-                        parameter.min = base_value.min
-                        parameter.step = base_value.step
-                    elif isinstance(parameter, HonParameterRange):
-                        parameter.max = int(base_value.value)
-                        parameter.min = int(base_value.value)
-                        parameter.step = 1
-                    elif isinstance(parameter, HonParameterEnum):
-                        parameter.values = base_value.values
-                    parameter.value = base_value.value
+
+            for name, target_param in data.parameters.items():
+                if not (base_param := base.parameters.get(name)):
+                    return
+                self.sync_parameter(base_param, target_param)
+
+    def sync_parameter(self, main: Parameter, target: Parameter) -> None:
+        if isinstance(main, HonParameterRange) and isinstance(
+            target, HonParameterRange
+        ):
+            target.max = main.max
+            target.min = main.min
+            target.step = main.step
+        elif isinstance(target, HonParameterRange):
+            target.max = int(main.value)
+            target.min = int(main.value)
+            target.step = 1
+        elif isinstance(target, HonParameterEnum):
+            target.values = main.values
+        target.value = main.value

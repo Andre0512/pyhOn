@@ -7,9 +7,10 @@ from typing import List, Optional, Dict, Any, Type
 from aiohttp import ClientSession
 from typing_extensions import Self
 
-from pyhon import HonAPI, exceptions
 from pyhon.appliance import HonAppliance
+from pyhon.connection.api import HonAPI
 from pyhon.connection.api import TestAPI
+from pyhon.exceptions import NoAuthenticationException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class Hon:
     @property
     def api(self) -> HonAPI:
         if self._api is None:
-            raise exceptions.NoAuthenticationException
+            raise NoAuthenticationException
         return self._api
 
     @property

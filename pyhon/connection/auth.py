@@ -30,6 +30,14 @@ class HonLoginData:
     loaded: Optional[Dict[str, Any]] = None
 
 
+@dataclass
+class HonAuthData:
+    access_token: str = ""
+    refresh_token: str = ""
+    cognito_token: str = ""
+    id_token: str = ""
+
+
 class HonAuth:
     _TOKEN_EXPIRES_AFTER_HOURS = 8
     _TOKEN_EXPIRE_WARNING_HOURS = 7
@@ -46,28 +54,25 @@ class HonAuth:
         self._login_data = HonLoginData()
         self._login_data.email = email
         self._login_data.password = password
-        self._access_token = ""
-        self._refresh_token = ""
-        self._cognito_token = ""
-        self._id_token = ""
         self._device = device
         self._expires: datetime = datetime.utcnow()
+        self._auth = HonAuthData()
 
     @property
     def cognito_token(self) -> str:
-        return self._cognito_token
+        return self._auth.cognito_token
 
     @property
     def id_token(self) -> str:
-        return self._id_token
+        return self._auth.id_token
 
     @property
     def access_token(self) -> str:
-        return self._access_token
+        return self._auth.access_token
 
     @property
     def refresh_token(self) -> str:
-        return self._refresh_token
+        return self._auth.refresh_token
 
     def _check_token_expiration(self, hours: int) -> bool:
         return datetime.utcnow() >= self._expires + timedelta(hours=hours)
@@ -192,12 +197,12 @@ class HonAuth:
 
     def _parse_token_data(self, text: str) -> bool:
         if access_token := re.findall("access_token=(.*?)&", text):
-            self._access_token = access_token[0]
+            self._auth.access_token = access_token[0]
         if refresh_token := re.findall("refresh_token=(.*?)&", text):
-            self._refresh_token = refresh_token[0]
+            self._auth.refresh_token = refresh_token[0]
         if id_token := re.findall("id_token=(.*?)&", text):
-            self._id_token = id_token[0]
-        return True if access_token and refresh_token and id_token else False
+            self._auth.id_token = id_token[0]
+        return bool(access_token and refresh_token and id_token)
 
     async def _get_token(self, url: str) -> bool:
         async with self._request.get(url) as response:
@@ -229,7 +234,7 @@ class HonAuth:
         return True
 
     async def _api_auth(self) -> bool:
-        post_headers = {"id-token": self._id_token}
+        post_headers = {"id-token": self._auth.id_token}
         data = self._device.get()
         async with self._request.post(
             f"{const.API_URL}/auth/v1/login", headers=post_headers, json=data
@@ -239,8 +244,8 @@ class HonAuth:
             except json.JSONDecodeError:
                 await self._error_logger(response)
                 return False
-            self._cognito_token = json_data.get("cognitoUser", {}).get("Token", "")
-            if not self._cognito_token:
+            self._auth.cognito_token = json_data.get("cognitoUser", {}).get("Token", "")
+            if not self._auth.cognito_token:
                 _LOGGER.error(json_data)
                 raise exceptions.HonAuthenticationError()
         return True
@@ -262,7 +267,7 @@ class HonAuth:
     async def refresh(self) -> bool:
         params = {
             "client_id": const.CLIENT_ID,
-            "refresh_token": self._refresh_token,
+            "refresh_token": self._auth.refresh_token,
             "grant_type": "refresh_token",
         }
         async with self._request.post(
@@ -273,14 +278,14 @@ class HonAuth:
                 return False
             data = await response.json()
         self._expires = datetime.utcnow()
-        self._id_token = data["id_token"]
-        self._access_token = data["access_token"]
+        self._auth.id_token = data["id_token"]
+        self._auth.access_token = data["access_token"]
         return await self._api_auth()
 
     def clear(self) -> None:
         self._session.cookie_jar.clear_domain(const.AUTH_API.split("/")[-2])
         self._request.called_urls = []
-        self._cognito_token = ""
-        self._id_token = ""
-        self._access_token = ""
-        self._refresh_token = ""
+        self._auth.cognito_token = ""
+        self._auth.id_token = ""
+        self._auth.access_token = ""
+        self._auth.refresh_token = ""

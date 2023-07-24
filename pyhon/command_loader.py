@@ -17,12 +17,12 @@ class HonCommandLoader:
     """Loads and parses hOn command data"""
 
     def __init__(self, api: "HonAPI", appliance: "HonAppliance") -> None:
+        self._api: "HonAPI" = api
+        self._appliance: "HonAppliance" = appliance
         self._api_commands: Dict[str, Any] = {}
         self._favourites: List[Dict[str, Any]] = []
         self._command_history: List[Dict[str, Any]] = []
         self._commands: Dict[str, HonCommand] = {}
-        self._api: "HonAPI" = api
-        self._appliance: "HonAppliance" = appliance
         self._appliance_data: Dict[str, Any] = {}
         self._additional_data: Dict[str, Any] = {}
 
@@ -184,22 +184,44 @@ class HonCommandLoader:
     def _add_favourites(self) -> None:
         """Patch program categories with favourites"""
         for favourite in self._favourites:
-            name = favourite.get("favouriteName", {})
-            command = favourite.get("command", {})
-            command_name = command.get("commandName", "")
-            program_name = self._clean_name(command.get("programName", ""))
-            base: HonCommand = copy(
-                self.commands[command_name].categories[program_name]
-            )
-            for data in command.values():
-                if isinstance(data, str):
+            name, command_name, base = self._get_favourite_info(favourite)
+            if not base:
+                continue
+            base_command: HonCommand = copy(base)
+            self._update_base_command_with_data(base_command, favourite)
+            self._update_base_command_with_favourite(base_command)
+            self._update_program_categories(command_name, name, base_command)
+
+    def _get_favourite_info(
+        self, favourite: Dict[str, Any]
+    ) -> tuple[str, str, HonCommand | None]:
+        name: str = favourite.get("favouriteName", {})
+        command = favourite.get("command", {})
+        command_name: str = command.get("commandName", "")
+        program_name = self._clean_name(command.get("programName", ""))
+        base_command = self.commands[command_name].categories.get(program_name)
+        return name, command_name, base_command
+
+    def _update_base_command_with_data(
+        self, base_command: HonCommand, command: Dict[str, Any]
+    ) -> None:
+        for data in command.values():
+            if isinstance(data, str):
+                continue
+            for key, value in data.items():
+                if not (parameter := base_command.parameters.get(key)):
                     continue
-                for key, value in data.items():
-                    if parameter := base.parameters.get(key):
-                        with suppress(ValueError):
-                            parameter.value = value
-            extra_param = HonParameterFixed("favourite", {"fixedValue": "1"}, "custom")
-            base.parameters.update(favourite=extra_param)
-            if isinstance(program := base.parameters["program"], HonParameterProgram):
-                program.set_value(name)
-            self.commands[command_name].categories[name] = base
+                with suppress(ValueError):
+                    parameter.value = value
+
+    def _update_base_command_with_favourite(self, base_command: HonCommand) -> None:
+        extra_param = HonParameterFixed("favourite", {"fixedValue": "1"}, "custom")
+        base_command.parameters.update(favourite=extra_param)
+
+    def _update_program_categories(
+        self, command_name: str, name: str, base_command: HonCommand
+    ) -> None:
+        program = base_command.parameters["program"]
+        if isinstance(program, HonParameterProgram):
+            program.set_value(name)
+        self.commands[command_name].categories[name] = base_command
