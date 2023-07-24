@@ -13,6 +13,7 @@ from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.range import HonParameterRange
+from pyhon.parameter.fixed import HonParameterFixed
 from pyhon.typedefs import Parameter
 
 if TYPE_CHECKING:
@@ -287,7 +288,7 @@ class HonAppliance:
 
             for name, target_param in data.parameters.items():
                 if not (base_param := base.parameters.get(name)):
-                    return
+                    continue
                 self.sync_parameter(base_param, target_param)
 
     def sync_parameter(self, main: Parameter, target: Parameter) -> None:
@@ -297,10 +298,6 @@ class HonAppliance:
             target.max = main.max
             target.min = main.min
             target.step = main.step
-        elif isinstance(target, HonParameterRange):
-            target.max = int(main.value)
-            target.min = int(main.value)
-            target.step = 1
         elif isinstance(target, HonParameterEnum):
             target.values = main.values
         target.value = main.value

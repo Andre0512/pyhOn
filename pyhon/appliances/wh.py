@@ -1,11 +1,15 @@
 from typing import Any, Dict
 
 from pyhon.appliances.base import ApplianceBase
-
+from pyhon.parameter.base import HonParameter
 
 class Appliance(ApplianceBase):
     def attributes(self, data: Dict[str, Any]) -> Dict[str, Any]:
         data = super().attributes(data)
-        data["active"] = data["parameters"]["onOffStatus"] == "1"
+        parameter = data["parameters"]["onOffStatus"]
+        data["active"] = parameter.value == 1 if isinstance(parameter, HonParameter) else parameter == 1
 
         return data
+    
+    def settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        return settings
