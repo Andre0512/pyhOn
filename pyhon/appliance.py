@@ -13,7 +13,6 @@ from pyhon.commands import HonCommand
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.enum import HonParameterEnum
 from pyhon.parameter.range import HonParameterRange
-from pyhon.parameter.fixed import HonParameterFixed
 from pyhon.typedefs import Parameter
 
 if TYPE_CHECKING:
