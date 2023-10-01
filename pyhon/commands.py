@@ -102,10 +102,12 @@ class HonCommand:
         if name == "zoneMap" and self._appliance.zone:
             data["default"] = self._appliance.zone
         if data.get("category") == "rule":
-            if "fixedValue" not in data:
-                _LOGGER.error("Rule not supported: %s", data)
-            else:
+            if "fixedValue" in data:
                 self._rules.append(HonRuleSet(self, data["fixedValue"]))
+            elif "enumValues" in data:
+                self._rules.append(HonRuleSet(self, data["enumValues"]))
+            else:
+                _LOGGER.warning("Rule not supported: %s", data)
         match data.get("typology"):
             case "range":
                 self._parameters[name] = HonParameterRange(name, data, parameter)
