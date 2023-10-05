@@ -139,6 +139,8 @@ class HonCommand:
     async def send_parameters(self, params: Dict[str, str | float]) -> bool:
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         ancillary_params.pop("programRules", None)
+        if "prStr" in params:
+            params["prStr"] = self._category_name.upper()
         self.appliance.sync_command_to_params(self.name)
         try:
             result = await self.api.send_command(

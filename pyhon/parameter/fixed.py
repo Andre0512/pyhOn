@@ -18,7 +18,7 @@ class HonParameterFixed(HonParameter):
 
     @property
     def value(self) -> str | float:
-        return self._value if self._value is not None else "0"
+        return self._value if self._value != "" else "0"
 
     @value.setter
     def value(self, value: str | float) -> None:

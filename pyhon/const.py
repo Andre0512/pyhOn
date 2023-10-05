@@ -6,7 +6,7 @@ CLIENT_ID = (
     "3MVG9QDx8IX8nP5T2Ha8ofvlmjLZl5L_gvfbT9."
     "HJvpHGKoAS_dcMN8LYpTSYeVFCraUnV.2Ag1Ki7m4znVO6"
 )
-APP_VERSION = "2.1.2"
+APP_VERSION = "2.3.5"
 OS_VERSION = 31
 OS = "android"
 DEVICE_MODEL = "exynos9820"
