@@ -68,8 +68,9 @@ class HonParameter:
         self._triggers.setdefault(value, []).append((func, data))
 
     def check_trigger(self, value: str | float) -> None:
-        if str(value) in self._triggers:
-            for trigger in self._triggers[str(value)]:
+        triggers = {str(k).lower(): v for k, v in self._triggers.items()}
+        if str(value).lower() in triggers:
+            for trigger in triggers[str(value)]:
                 func, args = trigger
                 func(args)
 

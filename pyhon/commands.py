@@ -102,10 +102,12 @@ class HonCommand:
         if name == "zoneMap" and self._appliance.zone:
             data["default"] = self._appliance.zone
         if data.get("category") == "rule":
-            if "fixedValue" not in data:
-                _LOGGER.error("Rule not supported: %s", data)
-            else:
+            if "fixedValue" in data:
                 self._rules.append(HonRuleSet(self, data["fixedValue"]))
+            elif "enumValues" in data:
+                self._rules.append(HonRuleSet(self, data["enumValues"]))
+            else:
+                _LOGGER.warning("Rule not supported: %s", data)
         match data.get("typology"):
             case "range":
                 self._parameters[name] = HonParameterRange(name, data, parameter)
@@ -137,6 +139,8 @@ class HonCommand:
     async def send_parameters(self, params: Dict[str, str | float]) -> bool:
         ancillary_params = self.parameter_groups.get("ancillaryParameters", {})
         ancillary_params.pop("programRules", None)
+        if "prStr" in params:
+            params["prStr"] = self._category_name.upper()
         self.appliance.sync_command_to_params(self.name)
         try:
             result = await self.api.send_command(

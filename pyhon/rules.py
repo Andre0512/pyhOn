@@ -56,6 +56,11 @@ class HonRuleSet:
                     extra[trigger_key] = trigger_value
                     for extra_key, extra_data in param_data.items():
                         self._parse_conditions(param_key, extra_key, extra_data, extra)
+                else:
+                    param_data = {"typology": "fixed", "fixedValue": param_data}
+                    self._create_rule(
+                        param_key, trigger_key, trigger_value, param_data, extra
+                    )
 
     def _create_rule(
         self,
@@ -102,6 +107,10 @@ class HonRuleSet:
             param.values = [str(value)]
             param.value = str(value)
         elif isinstance(param, HonParameterRange):
+            if float(value) < param.min:
+                param.min = float(value)
+            elif float(value) > param.max:
+                param.max = float(value)
             param.value = float(value)
             return
         param.value = str(value)
