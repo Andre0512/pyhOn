@@ -307,6 +307,10 @@ class HonAppliance:
             target.max = main.max
             target.min = main.min
             target.step = main.step
+        elif isinstance(target, HonParameterRange):
+            target.max = int(main.value)
+            target.min = int(main.value)
+            target.step = 1
         elif isinstance(target, HonParameterEnum):
             target.values = main.values
         target.value = main.value
