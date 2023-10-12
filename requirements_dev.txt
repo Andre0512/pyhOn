@@ -1,4 +1,4 @@
 black~=23.9
 flake8~=6.1
-mypy~=1.4
+mypy~=1.6
 pylint~=3.0
