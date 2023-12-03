@@ -94,15 +94,15 @@ class HonAppliance:
 
     @property
     def appliance_model_id(self) -> str:
-        return self._info.get("applianceModelId", "")
+        return str(self._info.get("applianceModelId", ""))
 
     @property
     def appliance_type(self) -> str:
-        return self._info.get("applianceTypeName", "")
+        return str(self._info.get("applianceTypeName", ""))
 
     @property
     def mac_address(self) -> str:
-        return self.info.get("macAddress", "")
+        return str(self.info.get("macAddress", ""))
 
     @property
     def unique_id(self) -> str:
@@ -138,11 +138,11 @@ class HonAppliance:
 
     @property
     def model_id(self) -> int:
-        return self._info.get("applianceModelId", 0)
+        return int(self._info.get("applianceModelId", 0))
 
     @property
     def options(self) -> Dict[str, Any]:
-        return self._appliance_model.get("options", {})
+        return dict(self._appliance_model.get("options", {}))
 
     @property
     def commands(self) -> Dict[str, HonCommand]:

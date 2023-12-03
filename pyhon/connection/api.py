@@ -190,6 +190,7 @@ class HonAPI:
         command: str,
         parameters: Dict[str, Any],
         ancillary_parameters: Dict[str, Any],
+        program_name: str = "",
     ) -> bool:
         now: str = datetime.utcnow().isoformat()
         data: Dict[str, Any] = {
@@ -208,6 +209,8 @@ class HonAPI:
             "parameters": parameters,
             "applianceType": appliance.appliance_type,
         }
+        if command == "startProgram" and program_name:
+            data.update({"programName": program_name.upper()})
         url: str = f"{const.API_URL}/commands/v1/send"
         async with self._hon.post(url, json=data) as response:
             json_data: Dict[str, Any] = await response.json()
@@ -319,6 +322,12 @@ class TestAPI(HonAPI):
         command: str,
         parameters: Dict[str, Any],
         ancillary_parameters: Dict[str, Any],
+        program_name: str = "",
     ) -> bool:
-        _LOGGER.info("%s - %s", str(parameters), str(ancillary_parameters))
+        _LOGGER.info(
+            "%s - %s - %s",
+            str(parameters),
+            str(ancillary_parameters),
+            str(program_name),
+        )
         return True

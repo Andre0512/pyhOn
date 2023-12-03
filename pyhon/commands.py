@@ -144,7 +144,11 @@ class HonCommand:
         self.appliance.sync_command_to_params(self.name)
         try:
             result = await self.api.send_command(
-                self._appliance, self._name, params, ancillary_params
+                self._appliance,
+                self._name,
+                params,
+                ancillary_params,
+                self._category_name,
             )
             if not result:
                 _LOGGER.error(result)
