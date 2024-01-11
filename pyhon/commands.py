@@ -91,6 +91,9 @@ class HonCommand:
 
     def _load_parameters(self, attributes: Dict[str, Dict[str, Any]]) -> None:
         for key, items in attributes.items():
+            if not isinstance(items, dict):
+                _LOGGER.info("Loading Attributes - Skipping %s", str(items))
+                continue
             for name, data in items.items():
                 self._create_parameters(data, name, key)
         for rule in self._rules:
