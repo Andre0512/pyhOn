@@ -103,8 +103,10 @@ class Hon:
                     )
             await self._create_appliance(appliance, self.api)
         if (
-            test_data := self._test_data_path / "hon-test-data" / "test_data"
-        ).exists() or (test_data := test_data / "test_data").exists():
+            self._test_data_path
+            and (test_data := self._test_data_path / "hon-test-data" / "test_data").exists()
+            or (test_data := test_data / "..").exists()
+        ):
             api = TestAPI(test_data)
             for appliance in await api.load_appliances():
                 await self._create_appliance(appliance, api)

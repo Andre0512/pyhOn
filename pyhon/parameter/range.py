@@ -69,11 +69,9 @@ class HonParameterRange(HonParameter):
 
     @property
     def values(self) -> List[str]:
-        if isinstance(self.step, float):
-            result = []
-            i = self.min
-            while i <= self.max:
-                i += self.step
-                result.append(str(i))
-            return result
-        return [str(i) for i in range(int(self.min), int(self.max) + 1, int(self.step))]
+        result = []
+        i = self.min
+        while i < self.max:
+            i += self.step
+            result.append(str(i))
+        return result
