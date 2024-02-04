@@ -14,8 +14,7 @@ if TYPE_CHECKING:
 class Callback(Protocol):  # pylint: disable=too-few-public-methods
     def __call__(
         self, url: str | URL, *args: Any, **kwargs: Any
-    ) -> aiohttp.client._RequestContextManager:
-        ...
+    ) -> aiohttp.client._RequestContextManager: ...
 
 
 Parameter = Union[
