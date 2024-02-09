@@ -22,6 +22,7 @@ class Hon:
         password: Optional[str] = "",
         session: Optional[ClientSession] = None,
         mobile_id: str = "",
+        refresh_token: str = "",
         test_data_path: Optional[Path] = None,
     ):
         self._email: Optional[str] = email
@@ -31,6 +32,7 @@ class Hon:
         self._api: Optional[HonAPI] = None
         self._test_data_path: Path = test_data_path or Path().cwd()
         self._mobile_id: str = mobile_id
+        self._refresh_token: str = refresh_token
 
     async def __aenter__(self) -> Self:
         return await self.create()
@@ -63,7 +65,11 @@ class Hon:
 
     async def create(self) -> Self:
         self._api = await HonAPI(
-            self.email, self.password, session=self._session
+            self.email,
+            self.password,
+            session=self._session,
+            mobile_id=self._mobile_id,
+            refresh_token=self._refresh_token,
         ).create()
         await self.setup()
         return self

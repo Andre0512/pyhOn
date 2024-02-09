@@ -48,6 +48,7 @@ class HonAuth:
         email: str,
         password: str,
         device: HonDevice,
+        refresh_token: str = "",
     ) -> None:
         self._session = session
         self._request = HonAuthConnectionHandler(session)
@@ -57,6 +58,7 @@ class HonAuth:
         self._device = device
         self._expires: datetime = datetime.utcnow()
         self._auth = HonAuthData()
+        self._auth.refresh_token = refresh_token
 
     @property
     def cognito_token(self) -> str:

@@ -23,12 +23,14 @@ class HonConnectionHandler(ConnectionHandler):
         email: str,
         password: str,
         mobile_id: str = "",
+        refresh_token: str = "",
         session: Optional[aiohttp.ClientSession] = None,
     ) -> None:
         super().__init__(session=session)
         self._device: HonDevice = HonDevice(mobile_id)
         self._email: str = email
         self._password: str = password
+        self._refresh_token: str = refresh_token
         if not self._email:
             raise HonAuthenticationError("An email address must be specified")
         if not self._password:
@@ -47,7 +49,13 @@ class HonConnectionHandler(ConnectionHandler):
 
     async def create(self) -> Self:
         await super().create()
-        self._auth = HonAuth(self.session, self._email, self._password, self._device)
+        self._auth = HonAuth(
+            self.session,
+            self._email,
+            self._password,
+            self._device,
+            refresh_token=self._refresh_token,
+        )
         return self
 
     async def _check_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
