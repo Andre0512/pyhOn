@@ -24,12 +24,14 @@ class HonAPI:
         email: str = "",
         password: str = "",
         anonymous: bool = False,
+        mobile_id: str = "",
         session: Optional[ClientSession] = None,
     ) -> None:
         super().__init__()
         self._email: str = email
         self._password: str = password
         self._anonymous: bool = anonymous
+        self._mobile_id: str = mobile_id
         self._hon_handler: Optional[HonConnectionHandler] = None
         self._hon_anonymous_handler: Optional[HonAnonymousConnectionHandler] = None
         self._session: Optional[ClientSession] = session
@@ -69,7 +71,7 @@ class HonAPI:
         ).create()
         if not self._anonymous:
             self._hon_handler = await HonConnectionHandler(
-                self._email, self._password, self._session
+                self._email, self._password, self._session, mobile_id=self._mobile_id
             ).create()
         return self
 

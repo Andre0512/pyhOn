@@ -21,6 +21,7 @@ class Hon:
         email: Optional[str] = "",
         password: Optional[str] = "",
         session: Optional[ClientSession] = None,
+        mobile_id: str = "",
         test_data_path: Optional[Path] = None,
     ):
         self._email: Optional[str] = email
@@ -29,6 +30,7 @@ class Hon:
         self._appliances: List[HonAppliance] = []
         self._api: Optional[HonAPI] = None
         self._test_data_path: Path = test_data_path or Path().cwd()
+        self._mobile_id: str = mobile_id
 
     async def __aenter__(self) -> Self:
         return await self.create()

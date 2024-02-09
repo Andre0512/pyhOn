@@ -1,16 +1,15 @@
-import secrets
 from typing import Dict
 
 from pyhon import const
 
 
 class HonDevice:
-    def __init__(self) -> None:
+    def __init__(self, mobile_id: str = "") -> None:
         self._app_version: str = const.APP_VERSION
         self._os_version: int = const.OS_VERSION
         self._os: str = const.OS
         self._device_model: str = const.DEVICE_MODEL
-        self._mobile_id: str = secrets.token_hex(8)
+        self._mobile_id: str = mobile_id or const.MOBILE_ID
 
     @property
     def app_version(self) -> str:

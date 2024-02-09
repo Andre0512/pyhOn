@@ -19,10 +19,14 @@ _LOGGER = logging.getLogger(__name__)
 
 class HonConnectionHandler(ConnectionHandler):
     def __init__(
-        self, email: str, password: str, session: Optional[aiohttp.ClientSession] = None
+        self,
+        email: str,
+        password: str,
+        mobile_id: str = "",
+        session: Optional[aiohttp.ClientSession] = None,
     ) -> None:
         super().__init__(session=session)
-        self._device: HonDevice = HonDevice()
+        self._device: HonDevice = HonDevice(mobile_id)
         self._email: str = email
         self._password: str = password
         if not self._email:
