@@ -264,7 +264,7 @@ class HonAuth:
         except exceptions.HonNoAuthenticationNeeded:
             return
 
-    async def refresh(self, refresh_token="") -> bool:
+    async def refresh(self, refresh_token: str = "") -> bool:
         if refresh_token:
             self._auth.refresh_token = refresh_token
         params = {
