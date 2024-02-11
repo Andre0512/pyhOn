@@ -75,7 +75,7 @@ class HonAPI:
             self._hon_handler = await HonConnectionHandler(
                 self._email,
                 self._password,
-                self._session,
+                session=self._session,
                 mobile_id=self._mobile_id,
             ).create()
         return self

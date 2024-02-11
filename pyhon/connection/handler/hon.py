@@ -22,9 +22,9 @@ class HonConnectionHandler(ConnectionHandler):
         self,
         email: str,
         password: str,
+        session: Optional[aiohttp.ClientSession] = None,
         mobile_id: str = "",
         refresh_token: str = "",
-        session: Optional[aiohttp.ClientSession] = None,
     ) -> None:
         super().__init__(session=session)
         self._device: HonDevice = HonDevice(mobile_id)
@@ -54,11 +54,12 @@ class HonConnectionHandler(ConnectionHandler):
             self._email,
             self._password,
             self._device,
-            refresh_token=self._refresh_token,
         )
         return self
 
     async def _check_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
+        if self._refresh_token:
+            await self.auth.refresh(self._refresh_token)
         if not (self.auth.cognito_token and self.auth.id_token):
             await self.auth.authenticate()
         headers["cognito-token"] = self.auth.cognito_token
