@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="pyhOn",
-    version="0.15.16",
+    version="0.16.0",
     author="Andre Basche",
     description="Control hOn devices with python",
     long_description=long_description,
