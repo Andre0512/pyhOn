@@ -120,6 +120,7 @@ class Hon:
             api = TestAPI(test_data)
             for appliance in await api.load_appliances():
                 await self._create_appliance(appliance, api)
+        await self.api.subscribe_mqtt(self.appliances)
 
     async def close(self) -> None:
         await self.api.close()

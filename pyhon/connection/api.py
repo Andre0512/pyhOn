@@ -7,10 +7,12 @@ from types import TracebackType
 from typing import Dict, Optional, Any, List, no_type_check, Type
 
 from aiohttp import ClientSession
+from awscrt import mqtt5
 from typing_extensions import Self
 
 from pyhon import const, exceptions
 from pyhon.appliance import HonAppliance
+from pyhon.connection import mqtt
 from pyhon.connection.auth import HonAuth
 from pyhon.connection.handler.anonym import HonAnonymousConnectionHandler
 from pyhon.connection.handler.hon import HonConnectionHandler
@@ -18,6 +20,7 @@ from pyhon.connection.handler.hon import HonConnectionHandler
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-instance-attributes
 class HonAPI:
     def __init__(
         self,
@@ -37,6 +40,7 @@ class HonAPI:
         self._hon_handler: Optional[HonConnectionHandler] = None
         self._hon_anonymous_handler: Optional[HonAnonymousConnectionHandler] = None
         self._session: Optional[ClientSession] = session
+        self._mqtt_client: mqtt5.Client | None = None
 
     async def __aenter__(self) -> Self:
         return await self.create()
@@ -191,6 +195,13 @@ class HonAPI:
             maintenance: Dict[str, Any] = (await response.json()).get("payload", {})
         return maintenance
 
+    async def load_aws_token(self) -> str:
+        url: str = f"{const.API_URL}/auth/v1/introspection"
+        async with self._hon.get(url) as response:
+            introspection: Dict[str, Any] = (await response.json()).get("payload", {})
+        result: str = introspection.get("tokenSigned", "")
+        return result
+
     async def send_command(
         self,
         appliance: HonAppliance,
@@ -257,6 +268,10 @@ class HonAPI:
         async with self._hon_anonymous.get(url) as response:
             result: Dict[str, Any] = await response.json()
         return result
+
+    async def subscribe_mqtt(self, appliances: list[HonAppliance]) -> None:
+        if not self._mqtt_client:
+            self._mqtt_client = await mqtt.start(self, appliances)
 
     async def close(self) -> None:
         if self._hon_handler is not None:

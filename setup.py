@@ -21,7 +21,12 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=["aiohttp>=3.8.6", "typing-extensions>=4.8", "yarl>=1.8"],
+    install_requires=[
+        "aiohttp>=3.8.6",
+        "typing-extensions>=4.8",
+        "yarl>=1.8",
+        "awsiotsdk>=1.21.0",
+    ],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
