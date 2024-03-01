@@ -71,7 +71,7 @@ class HonParameterRange(HonParameter):
     def values(self) -> List[str]:
         result = []
         i = self.min
-        while i < self.max:
-            i += self.step
+        while i <= self.max:
             result.append(str(i))
+            i += self.step
         return result
