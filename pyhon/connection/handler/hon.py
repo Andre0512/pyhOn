@@ -19,12 +19,18 @@ _LOGGER = logging.getLogger(__name__)
 
 class HonConnectionHandler(ConnectionHandler):
     def __init__(
-        self, email: str, password: str, session: Optional[aiohttp.ClientSession] = None
+        self,
+        email: str,
+        password: str,
+        session: Optional[aiohttp.ClientSession] = None,
+        mobile_id: str = "",
+        refresh_token: str = "",
     ) -> None:
         super().__init__(session=session)
-        self._device: HonDevice = HonDevice()
+        self._device: HonDevice = HonDevice(mobile_id)
         self._email: str = email
         self._password: str = password
+        self._refresh_token: str = refresh_token
         if not self._email:
             raise HonAuthenticationError("An email address must be specified")
         if not self._password:
@@ -43,10 +49,17 @@ class HonConnectionHandler(ConnectionHandler):
 
     async def create(self) -> Self:
         await super().create()
-        self._auth = HonAuth(self.session, self._email, self._password, self._device)
+        self._auth = HonAuth(
+            self.session,
+            self._email,
+            self._password,
+            self._device,
+        )
         return self
 
     async def _check_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
+        if self._refresh_token:
+            await self.auth.refresh(self._refresh_token)
         if not (self.auth.cognito_token and self.auth.id_token):
             await self.auth.authenticate()
         headers["cognito-token"] = self.auth.cognito_token

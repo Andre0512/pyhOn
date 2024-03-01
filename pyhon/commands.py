@@ -89,8 +89,11 @@ class HonCommand:
     def parameter_value(self) -> Dict[str, Union[str, float]]:
         return {n: p.value for n, p in self._parameters.items()}
 
-    def _load_parameters(self, attributes: Dict[str, Dict[str, Any]]) -> None:
+    def _load_parameters(self, attributes: Dict[str, Dict[str, Any] | Any]) -> None:
         for key, items in attributes.items():
+            if not isinstance(items, dict):
+                _LOGGER.info("Loading Attributes - Skipping %s", str(items))
+                continue
             for name, data in items.items():
                 self._create_parameters(data, name, key)
         for rule in self._rules:

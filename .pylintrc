@@ -4,6 +4,6 @@ disable=missing-docstring
 
 [FORMAT]
 
-max-args=6
+max-args=7
 max-attributes=8
 max-line-length=88

@@ -199,7 +199,7 @@ class HonAuth:
         if access_token := re.findall("access_token=(.*?)&", text):
             self._auth.access_token = access_token[0]
         if refresh_token := re.findall("refresh_token=(.*?)&", text):
-            self._auth.refresh_token = refresh_token[0]
+            self._auth.refresh_token = parse.unquote(refresh_token[0])
         if id_token := re.findall("id_token=(.*?)&", text):
             self._auth.id_token = id_token[0]
         return bool(access_token and refresh_token and id_token)
@@ -264,7 +264,9 @@ class HonAuth:
         except exceptions.HonNoAuthenticationNeeded:
             return
 
-    async def refresh(self) -> bool:
+    async def refresh(self, refresh_token: str = "") -> bool:
+        if refresh_token:
+            self._auth.refresh_token = refresh_token
         params = {
             "client_id": const.CLIENT_ID,
             "refresh_token": self._auth.refresh_token,

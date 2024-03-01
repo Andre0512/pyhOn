@@ -72,12 +72,10 @@ class HonAppliance:
         return self.info[item]
 
     @overload
-    def get(self, item: str, default: None = None) -> Any:
-        ...
+    def get(self, item: str, default: None = None) -> Any: ...
 
     @overload
-    def get(self, item: str, default: T) -> T:
-        ...
+    def get(self, item: str, default: T) -> T: ...
 
     def get(self, item: str, default: Optional[T] = None) -> Any:
         try:

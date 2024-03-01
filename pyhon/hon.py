@@ -21,6 +21,8 @@ class Hon:
         email: Optional[str] = "",
         password: Optional[str] = "",
         session: Optional[ClientSession] = None,
+        mobile_id: str = "",
+        refresh_token: str = "",
         test_data_path: Optional[Path] = None,
     ):
         self._email: Optional[str] = email
@@ -29,6 +31,8 @@ class Hon:
         self._appliances: List[HonAppliance] = []
         self._api: Optional[HonAPI] = None
         self._test_data_path: Path = test_data_path or Path().cwd()
+        self._mobile_id: str = mobile_id
+        self._refresh_token: str = refresh_token
 
     async def __aenter__(self) -> Self:
         return await self.create()
@@ -61,7 +65,11 @@ class Hon:
 
     async def create(self) -> Self:
         self._api = await HonAPI(
-            self.email, self.password, session=self._session
+            self.email,
+            self.password,
+            session=self._session,
+            mobile_id=self._mobile_id,
+            refresh_token=self._refresh_token,
         ).create()
         await self.setup()
         return self
@@ -103,8 +111,12 @@ class Hon:
                     )
             await self._create_appliance(appliance, self.api)
         if (
-            test_data := self._test_data_path / "hon-test-data" / "test_data"
-        ).exists() or (test_data := test_data / "test_data").exists():
+            self._test_data_path
+            and (
+                test_data := self._test_data_path / "hon-test-data" / "test_data"
+            ).exists()
+            or (test_data := test_data / "..").exists()
+        ):
             api = TestAPI(test_data)
             for appliance in await api.load_appliances():
                 await self._create_appliance(appliance, api)

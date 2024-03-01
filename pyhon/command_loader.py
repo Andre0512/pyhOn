@@ -109,7 +109,7 @@ class HonCommandLoader:
         categories: Optional[Dict[str, "HonCommand"]] = None,
         category_name: str = "",
     ) -> Optional[HonCommand]:
-        """Try to crate HonCommand object"""
+        """Try to create HonCommand object"""
         if not isinstance(data, dict):
             self._additional_data[command_name] = data
             return None
