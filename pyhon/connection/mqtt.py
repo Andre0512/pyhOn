@@ -1,5 +1,6 @@
 import json
 import logging
+import secrets
 from typing import TYPE_CHECKING
 
 from awscrt import mqtt5
@@ -27,6 +28,17 @@ def on_lifecycle_connection_success(
         "Lifecycle Connection Success: %s", str(lifecycle_connect_success_data)
     )
 
+def on_lifecycle_attempting_connect(lifecycle_attempting_connect_data):
+    _LOGGER.info("Lifecycle Attempting Connect - %s", lifecycle_attempting_connect_data)
+
+
+def on_lifecycle_connection_failure(lifecycle_connection_failure_data):
+    _LOGGER.info("Lifecycle Connection Failure - %s", lifecycle_connection_failure_data)
+
+
+def on_lifecycle_disconnection(lifecycle_disconnect_data):
+    _LOGGER.info("Lifecycle Disconnection - %s", lifecycle_disconnect_data)
+
 
 def on_publish_received(data: mqtt5.PublishReceivedData) -> None:
     if not (data and data.publish_packet and data.publish_packet.payload):
@@ -40,9 +52,7 @@ def on_publish_received(data: mqtt5.PublishReceivedData) -> None:
         for parameter in payload["parameters"]:
             appliance.attributes["parameters"][parameter["parName"]].update(parameter)
         appliance.notify()
-        _LOGGER.debug("%s - %s", topic, payload)
-    else:
-        _LOGGER.debug("%s - %s", topic, payload)
+    _LOGGER.info("%s - %s", topic, payload)
 
 
 async def create_mqtt_client(api: "HonAPI") -> mqtt5.Client:
@@ -52,9 +62,12 @@ async def create_mqtt_client(api: "HonAPI") -> mqtt5.Client:
         auth_authorizer_signature=await api.load_aws_token(),
         auth_token_key_name="token",
         auth_token_value=api.auth.id_token,
-        client_id=const.MOBILE_ID,
+        client_id=f"{const.MOBILE_ID}_{secrets.token_hex(8)}",
         on_lifecycle_stopped=on_lifecycle_stopped,
         on_lifecycle_connection_success=on_lifecycle_connection_success,
+        on_lifecycle_attempting_connect=on_lifecycle_attempting_connect,
+        on_lifecycle_connection_failure=on_lifecycle_connection_failure,
+        on_lifecycle_disconnection=on_lifecycle_disconnection,
         on_publish_received=on_publish_received,
     )
     client.start()
