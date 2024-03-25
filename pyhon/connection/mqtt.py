@@ -17,16 +17,15 @@ appliances: list[HonAppliance] = []
 
 
 def on_lifecycle_stopped(lifecycle_stopped_data: mqtt5.LifecycleStoppedData) -> None:
-    print("Lifecycle Stopped")
-    print(lifecycle_stopped_data)
+    _LOGGER.info("Lifecycle Stopped: %s", str(lifecycle_stopped_data))
 
 
 def on_lifecycle_connection_success(
     lifecycle_connect_success_data: mqtt5.LifecycleConnectSuccessData,
 ) -> None:
-    print("Lifecycle Connection Success")
-    print(lifecycle_connect_success_data.connack_packet)
-    print(lifecycle_connect_success_data.negotiated_settings)
+    _LOGGER.info(
+        "Lifecycle Connection Success: %s", str(lifecycle_connect_success_data)
+    )
 
 
 def on_publish_received(data: mqtt5.PublishReceivedData) -> None:
@@ -40,9 +39,10 @@ def on_publish_received(data: mqtt5.PublishReceivedData) -> None:
         )
         for parameter in payload["parameters"]:
             appliance.attributes["parameters"][parameter["parName"]].update(parameter)
-            print(parameter)
+        appliance.notify()
+        _LOGGER.debug("%s - %s", topic, payload)
     else:
-        print(topic, payload)
+        _LOGGER.debug("%s - %s", topic, payload)
 
 
 async def create_mqtt_client(api: "HonAPI") -> mqtt5.Client:
@@ -64,7 +64,7 @@ async def create_mqtt_client(api: "HonAPI") -> mqtt5.Client:
 def subscribe(client: mqtt5.Client, appliance: HonAppliance) -> None:
     for topic in appliance.info.get("topics", {}).get("subscribe", []):
         client.subscribe(mqtt5.SubscribePacket([mqtt5.Subscription(topic)])).result(10)
-        _LOGGER.error("Subscribed to topic %s", topic)
+        _LOGGER.info("Subscribed to topic %s", topic)
 
 
 async def start(api: "HonAPI", app: list[HonAppliance]) -> mqtt5.Client:
