@@ -28,16 +28,27 @@ def on_lifecycle_connection_success(
         "Lifecycle Connection Success: %s", str(lifecycle_connect_success_data)
     )
 
-def on_lifecycle_attempting_connect(lifecycle_attempting_connect_data):
-    _LOGGER.info("Lifecycle Attempting Connect - %s", lifecycle_attempting_connect_data)
+
+def on_lifecycle_attempting_connect(
+    lifecycle_attempting_connect_data: mqtt5.LifecycleAttemptingConnectData,
+) -> None:
+    _LOGGER.info(
+        "Lifecycle Attempting Connect - %s", str(lifecycle_attempting_connect_data)
+    )
 
 
-def on_lifecycle_connection_failure(lifecycle_connection_failure_data):
-    _LOGGER.info("Lifecycle Connection Failure - %s", lifecycle_connection_failure_data)
+def on_lifecycle_connection_failure(
+    lifecycle_connection_failure_data: mqtt5.LifecycleConnectFailureData,
+) -> None:
+    _LOGGER.info(
+        "Lifecycle Connection Failure - %s", str(lifecycle_connection_failure_data)
+    )
 
 
-def on_lifecycle_disconnection(lifecycle_disconnect_data):
-    _LOGGER.info("Lifecycle Disconnection - %s", lifecycle_disconnect_data)
+def on_lifecycle_disconnection(
+    lifecycle_disconnect_data: mqtt5.LifecycleDisconnectData,
+) -> None:
+    _LOGGER.info("Lifecycle Disconnection - %s", str(lifecycle_disconnect_data))
 
 
 def on_publish_received(data: mqtt5.PublishReceivedData) -> None:
