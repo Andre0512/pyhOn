@@ -45,7 +45,7 @@ class HonParameterProgram(HonParameterEnum):
         for name, parameter in self._programs.items():
             if "iot_" in name:
                 continue
-            if parameter.parameters.get("prCode"):
+            if not parameter.parameters.get("prCode"):
                 continue
             if (fav := parameter.parameters.get("favourite")) and fav.value == "1":
                 continue

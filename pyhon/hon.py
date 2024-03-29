@@ -93,13 +93,9 @@ class Hon:
         if appliance.mac_address == "":
             return
         try:
-            await asyncio.gather(
-                *[
-                    appliance.load_attributes(),
-                    appliance.load_commands(),
-                    appliance.load_statistics(),
-                ]
-            )
+            await appliance.load_commands()
+            await appliance.load_attributes()
+            await appliance.load_statistics()
         except (KeyError, ValueError, IndexError) as error:
             _LOGGER.exception(error)
             _LOGGER.error("Device data - %s", appliance_data)
