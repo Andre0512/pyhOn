@@ -3,7 +3,7 @@ import logging
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, Dict, Any, TYPE_CHECKING, List, TypeVar, overload, Callable
+from typing import Optional, Dict, Any, TYPE_CHECKING, List, TypeVar, overload
 
 from pyhon import diagnose, exceptions
 from pyhon.appliances.base import ApplianceBase
@@ -43,7 +43,6 @@ class HonAppliance:
         self._additional_data: Dict[str, Any] = {}
         self._last_update: Optional[datetime] = None
         self._default_setting = HonParameter("", {}, "")
-        self._notify_function: Optional[Callable[[Any], None]] = None
 
         try:
             self._extra: Optional[ApplianceBase] = importlib.import_module(
@@ -313,11 +312,3 @@ class HonAppliance:
         elif isinstance(target, HonParameterEnum):
             target.values = main.values
         target.value = main.value
-
-    def subscribe(self, notify_function: Callable[[Any], None]) -> None:
-        self._notify_function = notify_function
-
-    def notify(self) -> None:
-        self.sync_params_to_command("settings")
-        if self._notify_function:
-            self._notify_function(self.attributes)

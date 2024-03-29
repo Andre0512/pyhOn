@@ -2,7 +2,7 @@ import asyncio
 import logging
 from pathlib import Path
 from types import TracebackType
-from typing import List, Optional, Dict, Any, Type
+from typing import List, Optional, Dict, Any, Type, Callable
 
 from aiohttp import ClientSession
 from typing_extensions import Self
@@ -10,6 +10,7 @@ from typing_extensions import Self
 from pyhon.appliance import HonAppliance
 from pyhon.connection.api import HonAPI
 from pyhon.connection.api import TestAPI
+from pyhon.connection.mqtt import MQTTClient
 from pyhon.exceptions import NoAuthenticationException
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +34,8 @@ class Hon:
         self._test_data_path: Path = test_data_path or Path().cwd()
         self._mobile_id: str = mobile_id
         self._refresh_token: str = refresh_token
+        self._mqtt_client: MQTTClient | None = None
+        self._notify_function: Optional[Callable[[Any], None]] = None
 
     async def __aenter__(self) -> Self:
         return await self.create()
@@ -120,7 +123,15 @@ class Hon:
             api = TestAPI(test_data)
             for appliance in await api.load_appliances():
                 await self._create_appliance(appliance, api)
-        await self.api.subscribe_mqtt(self.appliances)
+        if not self._mqtt_client:
+            self._mqtt_client = await MQTTClient(self).create()
+
+    def subscribe_updates(self, notify_function: Callable[[Any], None]) -> None:
+        self._notify_function = notify_function
+
+    def notify(self) -> None:
+        if self._notify_function:
+            self._notify_function(None)
 
     async def close(self) -> None:
         await self.api.close()
