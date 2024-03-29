@@ -16,6 +16,7 @@ from pyhon.exceptions import NoAuthenticationException
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-instance-attributes
 class Hon:
     def __init__(
         self,
@@ -124,7 +125,7 @@ class Hon:
             for appliance in await api.load_appliances():
                 await self._create_appliance(appliance, api)
         if not self._mqtt_client:
-            self._mqtt_client = await MQTTClient(self).create()
+            self._mqtt_client = await MQTTClient(self, self._mobile_id).create()
 
     def subscribe_updates(self, notify_function: Callable[[Any], None]) -> None:
         self._notify_function = notify_function

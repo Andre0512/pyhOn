@@ -17,9 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MQTTClient:
-    def __init__(self, hon: "Hon"):
+    def __init__(self, hon: "Hon", mobile_id: str) -> None:
         self._client: mqtt5.Client | None = None
         self._hon = hon
+        self._mobile_id = mobile_id or const.MOBILE_ID
         self._api = hon.api
         self._appliances = hon.appliances
         self._connection = False
@@ -88,10 +89,10 @@ class MQTTClient:
                 )
             appliance.sync_params_to_command("settings")
             self._hon.notify()
-        elif topic and "connected" in topic:
-            _LOGGER.info("Connected %s", appliance.nick_name)
         elif topic and "disconnected" in topic:
             _LOGGER.info("Disconnected %s", appliance.nick_name)
+        elif topic and "connected" in topic:
+            _LOGGER.info("Connected %s", appliance.nick_name)
         elif topic and "discovery" in topic:
             _LOGGER.info("Discovered %s", appliance.nick_name)
         _LOGGER.info("%s - %s", topic, payload)
@@ -103,7 +104,7 @@ class MQTTClient:
             auth_authorizer_signature=await self._api.load_aws_token(),
             auth_token_key_name="token",
             auth_token_value=self._api.auth.id_token,
-            client_id=f"{const.MOBILE_ID}_{secrets.token_hex(8)}",
+            client_id=f"{self._mobile_id}_{secrets.token_hex(8)}",
             on_lifecycle_stopped=self._on_lifecycle_stopped,
             on_lifecycle_connection_success=self._on_lifecycle_connection_success,
             on_lifecycle_attempting_connect=self._on_lifecycle_attempting_connect,
