@@ -90,8 +90,14 @@ class MQTTClient:
             appliance.sync_params_to_command("settings")
             self._hon.notify()
         elif topic and "disconnected" in topic:
-            _LOGGER.info("Disconnected %s", appliance.nick_name)
+            _LOGGER.info(
+                "Disconnected %s: %s",
+                appliance.nick_name,
+                payload.get("disconnectReason"),
+            )
+            appliance.connection = False
         elif topic and "connected" in topic:
+            appliance.connection = True
             _LOGGER.info("Connected %s", appliance.nick_name)
         elif topic and "discovery" in topic:
             _LOGGER.info("Discovered %s", appliance.nick_name)

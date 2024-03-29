@@ -43,6 +43,10 @@ class HonAppliance:
         self._additional_data: Dict[str, Any] = {}
         self._last_update: Optional[datetime] = None
         self._default_setting = HonParameter("", {}, "")
+        self._connection = (
+            not self._attributes.get("lastConnEvent", {}).get("category", "")
+            == "DISCONNECTED"
+        )
 
         try:
             self._extra: Optional[ApplianceBase] = importlib.import_module(
@@ -89,6 +93,14 @@ class HonAppliance:
         if attribute and self._zone:
             return f"{attribute}{zone}{self._zone}"
         return attribute
+
+    @property
+    def connection(self) -> bool:
+        return self._connection
+
+    @connection.setter
+    def connection(self, connection: bool) -> None:
+        self._connection = connection
 
     @property
     def appliance_model_id(self) -> str:

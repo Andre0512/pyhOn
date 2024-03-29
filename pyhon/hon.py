@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from pathlib import Path
 from types import TracebackType
