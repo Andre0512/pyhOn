@@ -35,6 +35,7 @@ class MQTTClient:
     async def create(self) -> "MQTTClient":
         await self._start()
         self._subscribe_appliances()
+        await self.start_watchdog()
         return self
 
     def _on_lifecycle_stopped(
@@ -63,6 +64,7 @@ class MQTTClient:
         self,
         lifecycle_connection_failure_data: mqtt5.LifecycleConnectFailureData,
     ) -> None:
+        self._connection = False
         _LOGGER.info(
             "Lifecycle Connection Failure - %s", str(lifecycle_connection_failure_data)
         )
@@ -88,7 +90,6 @@ class MQTTClient:
                     parameter
                 )
             appliance.sync_params_to_command("settings")
-            self._hon.notify()
         elif topic and "disconnected" in topic:
             _LOGGER.info(
                 "Disconnected %s: %s",
@@ -101,6 +102,7 @@ class MQTTClient:
             _LOGGER.info("Connected %s", appliance.nick_name)
         elif topic and "discovery" in topic:
             _LOGGER.info("Discovered %s", appliance.nick_name)
+        self._hon.notify()
         _LOGGER.info("%s - %s", topic, payload)
 
     async def _start(self) -> None:
@@ -133,7 +135,7 @@ class MQTTClient:
 
     async def start_watchdog(self) -> None:
         if not self._watchdog_task or self._watchdog_task.done():
-            await asyncio.create_task(self._watchdog())
+            self._watchdog_task = asyncio.create_task(self._watchdog())
 
     async def _watchdog(self) -> None:
         while True:

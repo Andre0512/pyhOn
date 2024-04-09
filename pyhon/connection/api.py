@@ -78,6 +78,7 @@ class HonAPI:
                 self._password,
                 session=self._session,
                 mobile_id=self._mobile_id,
+                refresh_token=self._refresh_token,
             ).create()
         return self
 

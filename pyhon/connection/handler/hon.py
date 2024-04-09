@@ -62,6 +62,7 @@ class HonConnectionHandler(ConnectionHandler):
             await self.auth.refresh(self._refresh_token)
         if not (self.auth.cognito_token and self.auth.id_token):
             await self.auth.authenticate()
+        self._refresh_token = self.auth.refresh_token
         headers["cognito-token"] = self.auth.cognito_token
         headers["id-token"] = self.auth.id_token
         return self._HEADERS | headers
@@ -77,7 +78,7 @@ class HonConnectionHandler(ConnectionHandler):
                 self.auth.token_expires_soon or response.status in [401, 403]
             ) and loop == 0:
                 _LOGGER.info("Try refreshing token...")
-                await self.auth.refresh()
+                await self.auth.refresh(self._refresh_token)
                 async with self._intercept(
                     method, url, *args, loop=loop + 1, **kwargs
                 ) as result:
