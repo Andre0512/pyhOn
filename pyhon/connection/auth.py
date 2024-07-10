@@ -120,18 +120,23 @@ class HonAuth:
         async with self._request.get(url) as response:
             text = await response.text()
             self._expires = datetime.utcnow()
-            login_url: List[str] = re.findall("url = '(.+?)'", text)
+            login_url: List[str] = re.findall("(?:url|href) ?= ?'(.+?)'", text)
             if not login_url:
                 if "oauth/done#access_token=" in text:
                     self._parse_token_data(text)
                     raise exceptions.HonNoAuthenticationNeeded()
                 await self._error_logger(response)
+            # As of July 2024 the login page has changed, and we started getting a /NewhOnLogin based relative URL in JS to parse
+            if login_url[0].startswith("/NewhOnLogin"):
+                # Force use of the old login page to avoid having to make the new one work..
+                login_url[0] = f"{const.AUTH_API}/s/login{login_url[0]}"
         return login_url[0]
 
     async def _manual_redirect(self, url: str) -> str:
         async with self._request.get(url, allow_redirects=False) as response:
-            if not (new_location := response.headers.get("Location", "")):
-                await self._error_logger(response)
+            new_location = response.headers.get("Location", "")
+            if not new_location:
+                return url
         return new_location
 
     async def _handle_redirects(self, login_url: str) -> str:
