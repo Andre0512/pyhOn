@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="pyhOn",
-    version="0.17.4",
+    version="0.17.5",
     author="Andre Basche",
     description="Control hOn devices with python",
     long_description=long_description,
@@ -25,7 +25,7 @@ setup(
         "aiohttp>=3.8.6",
         "typing-extensions>=4.8",
         "yarl>=1.8",
-        "awsiotsdk>=1.21.0",
+        "paho-mqtt==1.6.1",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
