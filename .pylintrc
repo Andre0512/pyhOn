@@ -1,6 +1,6 @@
 [MESSAGES CONTROL]
 
-disable=missing-docstring
+disable=missing-docstring, contextmanager-generator-missing-cleanup
 
 [FORMAT]
 
