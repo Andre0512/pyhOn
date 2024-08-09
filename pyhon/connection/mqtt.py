@@ -38,8 +38,8 @@ class MQTTClient:
 
     def _on_message(
         self,
-        client: Client, # pylint: disable=unused-argument
-        userdata: "_UserData", # pylint: disable=unused-argument
+        client: Client,  # pylint: disable=unused-argument
+        userdata: "_UserData",  # pylint: disable=unused-argument
         message: "MQTTMessage",
     ) -> None:
         if not message.payload or not message.topic:
