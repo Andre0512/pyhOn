@@ -35,7 +35,7 @@ class Hon:
         self._mobile_id: str = mobile_id
         self._refresh_token: str = refresh_token
         self._mqtt_client: MQTTClient | None = None
-        self._notify_function: Optional[Callable[[Any], None]] = None
+        self._notify_function: Optional[Callable[[], None]] = None
 
     async def __aenter__(self) -> Self:
         return await self.create()
@@ -127,7 +127,7 @@ class Hon:
 
     def notify(self) -> None:
         if self._notify_function:
-            self._notify_function(None)
+            self._notify_function()
 
     async def close(self) -> None:
         await self.api.close()
