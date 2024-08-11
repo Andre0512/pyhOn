@@ -122,7 +122,7 @@ class Hon:
         if not self._mqtt_client:
             self._mqtt_client = await MQTTClient(self, self._mobile_id).create()
 
-    def subscribe_updates(self, notify_function: Callable[[Any], None]) -> None:
+    def subscribe_updates(self, notify_function: Callable[[], None]) -> None:
         self._notify_function = notify_function
 
     def notify(self) -> None:
