@@ -3,6 +3,7 @@ AUTH_API = "https://account2.hon-smarthome.com"
 API_URL = "https://api-iot.he.services"
 API_KEY = "GRCqFhC6Gk@ikWXm1RmnSmX1cm,MxY-configuration"
 AWS_ENDPOINT = "a30f6tqw0oh1x0-ats.iot.eu-west-1.amazonaws.com"
+AWS_PORT = 443
 AWS_AUTHORIZER = "candy-iot-authorizer"
 APP = "hon"
 CLIENT_ID = (

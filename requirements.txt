@@ -1,4 +1,4 @@
 aiohttp>=3.8.6
 yarl>=1.8
 typing-extensions>=4.8
-paho-mqtt==1.6.1
+aiomqtt==2.0.1

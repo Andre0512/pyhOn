@@ -5,6 +5,9 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
+with open("requirements.txt", "r", encoding="utf-8") as f:
+    install_requires = f.read().splitlines()
+
 setup(
     name="pyhOn",
     version="0.17.5",
@@ -21,12 +24,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=[
-        "aiohttp>=3.8.6",
-        "typing-extensions>=4.8",
-        "yarl>=1.8",
-        "paho-mqtt==1.6.1",
-    ],
+    install_requires=install_requires,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
