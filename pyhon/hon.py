@@ -92,8 +92,8 @@ class Hon:
         if appliance.mac_address == "":
             return
         try:
-            await appliance.load_commands()
             await appliance.load_attributes()
+            await appliance.load_commands()
             await appliance.load_statistics()
         except (KeyError, ValueError, IndexError) as error:
             _LOGGER.exception(error)
