@@ -59,10 +59,6 @@ class HonAppliance:
         result: List[Any] | Dict[str, Any] = self.data
         for key in item.split("."):
             if all(k in "0123456789" for k in key) and isinstance(result, list):
-                result = result[int(key)]
-            elif isinstance(result, dict):
-                result = result[key]
-        return result
 
     def __getitem__(self, item: str) -> Any:
         if self._zone:
@@ -321,6 +317,3 @@ class HonAppliance:
             target.max = int(main.value)
             target.min = int(main.value)
             target.step = 1
-        elif isinstance(target, HonParameterEnum):
-            target.values = main.values
-        target.value = main.value
