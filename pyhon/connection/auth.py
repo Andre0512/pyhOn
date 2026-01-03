@@ -133,6 +133,10 @@ class HonAuth:
         return login_url[0]
 
     async def _manual_redirect(self, url: str) -> str:
+        # Add custom scheme handling before the GET request
+        if any(url.startswith(s) for s in ['hon://', 'candy://', 'hoover://', 'rosieres://']):
+            return url
+            
         async with self._request.get(url, allow_redirects=False) as response:
             new_location = response.headers.get("Location", "")
             if not new_location:
