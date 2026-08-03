@@ -144,7 +144,6 @@ class HonCommand:
         ancillary_params.pop("programRules", None)
         if "prStr" in params:
             params["prStr"] = self._category_name.upper()
-        self.appliance.sync_command_to_params(self.name)
         try:
             result = await self.api.send_command(
                 self._appliance,
@@ -156,6 +155,7 @@ class HonCommand:
             if not result:
                 _LOGGER.error(result)
                 raise ApiError("Can't send command")
+            self.appliance.sync_command_to_params(self.name)
         except NoAuthenticationException:
             _LOGGER.error("No Authentication")
             return False
