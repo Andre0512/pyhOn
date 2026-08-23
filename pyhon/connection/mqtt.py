@@ -86,9 +86,9 @@ class MQTTClient:
         )
         if topic and "appliancestatus" in topic:
             for parameter in payload["parameters"]:
-                appliance.attributes["parameters"][parameter["parName"]].update(
-                    parameter
-                )
+                appliance.attributes["parameters"].setdefault(
+                    parameter["parName"], {}
+                ).update(parameter)
             appliance.sync_params_to_command("settings")
         elif topic and "disconnected" in topic:
             _LOGGER.info(
